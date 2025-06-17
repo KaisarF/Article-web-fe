@@ -1,36 +1,89 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-## Getting Started
+# Article Web (next.js)
 
-First, run the development server:
+Ini adalah frontend aplikasi web yang dibangun menggunakan Next.js. Aplikasi ini berfungsi sebagai antarmuka (interface) untuk pengguna berinteraksi dengan data yang disediakan oleh API eksternal.
+
+Aplikasi ini memiliki sistem autentikasi dan manajemen konten dengan dua peran utama: Admin dan User.
+
+
+## Features
+
+- Frontend Modern: Dibangun dengan Next.js untuk performa tinggi dan pengalaman pengguna yang responsif.
+- Autentikasi Pengguna: Sistem pendaftaran (/register) dan login (/login) yang terhubung ke API.
+- Manajemen Peran (Role): Hak akses halaman dan fungsionalitas dibedakan berdasarkan peran pengguna (Admin dan User).
+- Styling Cepat & Konsisten: Desain antarmuka dibangun menggunakan Tailwind CSS untuk pengembangan UI yang cepat dan dapat dirawat.
+- Routing Terproteksi: Halaman untuk Admin dan User hanya dapat diakses setelah login dan sesuai dengan perannya.
+
+
+## Role
+
+1. User
+Pengguna dengan peran User memiliki hak akses terbatas, yaitu:
+- Melihat semua artikel.
+- Melihat detail dari satu artikel.
+- Melihat profil pribadi mereka.
+- Akses mereka hanya diizinkan pada halaman yang diawali dengan /user.
+2. Admin
+Pengguna dengan peran Admin memiliki hak akses tertinggi untuk mengelola konten:
+- Semua hak akses yang dimiliki oleh User.
+- Menambah, mengedit, dan menghapus artikel.
+- Menambah, mengedit, dan menghapus kategori.
+- Akses mereka hanya diizinkan pada halaman yang diawali dengan /admin.
+## Struktur Halaman dan Rute (Page Routes)
+Berikut adalah daftar rute halaman yang tersedia di aplikasi Next.js ini.
+
+#Halaman Publik (Authentication)
+| URL | Deskripsi |
+| ----------- | :---------: |
+| /login | Menampilkan halaman untuk masuk. | 
+| /register| Menampilkan halaman untuk mendaftar.| 
+
+#Halaman User (Login Terlebih Dahulu)
+| URL | Deskripsi |
+| ----------- | :---------: |
+| /user/articles | Menampilkan halaman untuk masuk. | 
+| /user/articles/{id}| 	Menampilkan detail satu artikel.| 
+| /user/profile| Menampilkan halaman profil user.| 
+
+#Halaman Admin (Login Terlebih Dahulu)
+| URL | Deskripsi |
+| ----------- | :---------: |
+| /admin/articles | Menampilkan semua artikel (tampilan admin).| 
+| /admin/articles/add | Menampilkan form untuk menambah artikel baru. | 
+| /admin/articles/{id}| 	Menampilkan detail satu artikel.| 
+| /admin/articles/edit/{id}| 	Menampilkan detail satu artikel.| 
+| /admin/categories | Menampilkan semua kategori dan bisa menambah, mengubah dan menghapus kategori (tampilan admin). | 
+| /admin/profile| Menampilkan halaman profil admin.| 
+
+## Run Locally
+
+Clone the project
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+  git clone https://github.com/KaisarF/Article-web-fe.git
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Go to the project directory
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+  cd Article-web-fe
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Install dependencies
 
-## Learn More
+```bash
+  npm install
+```
 
-To learn more about Next.js, take a look at the following resources:
+Start the server
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+  npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Client:** Nextjs, React Hooks, Axios, TailwindCSS
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
