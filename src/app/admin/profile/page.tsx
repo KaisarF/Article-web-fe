@@ -3,9 +3,17 @@
 import api from "@/app/axios";
 import { useState, useEffect } from "react";
 import Link from 'next/link';
+import Cookies from 'js-cookie';
+interface UserData {
+  username: string;
+  role: string;
+  // Tambahkan properti lain yang mungkin ada, misalnya:
+  // id: number;
+  // email: string;
+}
 export default function Profile() {
 
-  const [userData, SetUserData] = useState ('')
+  const [userData, SetUserData] = useState <UserData | null>()
 
   const GetUserData = async()=>{
     const response = await api.get('/auth/profile')
@@ -16,8 +24,8 @@ export default function Profile() {
   useEffect(()=>{
     GetUserData()
   },[])
-  const initial = userData.username?.charAt(0).toUpperCase() || '';
-  const userPassword = localStorage.getItem('password')
+  const initial = userData?.username?.charAt(0).toUpperCase() || '';
+  const userPassword = Cookies.get('password')
   return (
     <div className="flex flex-col min-h-screen w-full">
       
@@ -36,7 +44,7 @@ export default function Profile() {
               <tr className="border-b">
                 <td className="p-3 font-medium text-gray-700 text-left w-32">Username</td>
                 <td className="p-3 text-gray-900">:</td>
-                <td className="p-3 text-gray-900">{userData.username}</td>
+                <td className="p-3 text-gray-900">{userData?.username}</td>
               </tr>
               <tr className="border-b my-4 py-5">
                 <td className="p-3 font-medium text-gray-700 text-left">Password</td>
@@ -46,7 +54,7 @@ export default function Profile() {
               <tr>
                 <td className="p-3 font-medium text-gray-700 text-left">Role</td>
                 <td className="p-3 text-gray-900">:</td>
-                <td className="p-3 text-gray-900">{userData.role}</td>
+                <td className="p-3 text-gray-900">{userData?.role}</td>
               </tr>
             </tbody>
           </table>

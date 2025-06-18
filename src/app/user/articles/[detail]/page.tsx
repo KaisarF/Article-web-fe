@@ -6,8 +6,8 @@ import { useEffect, useState, useMemo} from 'react';
 import React, { use } from 'react';
 import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
-import logoLight from '@/../public/logoipsum-light.svg';
-
+// import logoLight from '@/../public/logoipsum-light.svg';
+import placeholderImage from '@/../public/uploadImg.svg';
 interface Article {
   id: string;
   title: string;
@@ -97,7 +97,7 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
 
         
             <Image
-            src={article.imageUrl}
+            src={article.imageUrl || placeholderImage}
             alt={article.title}
             width={1120}
             height={480}
@@ -121,7 +121,7 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
                 randomOtherArticles.map(article => (
                     <Link key={article.id} className="bg-white overflow-hidden h-[432px]" href={`/user/articles/${article.id}`} >
                         <Image
-                            src={article.imageUrl}
+                            src={article.imageUrl || placeholderImage}
                             alt={article.title}
                             width={387}
                             height={240}

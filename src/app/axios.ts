@@ -1,5 +1,5 @@
 import axios from 'axios';
-
+import Cookies from 'js-cookie';
 const api = axios.create({
   baseURL: 'https://test-fe.mysellerpintar.com/api',
   headers: {
@@ -14,7 +14,7 @@ api.interceptors.request.use(
     // Cek apakah kode berjalan di sisi client sebelum mengakses localStorage
     if (typeof window !== 'undefined') {
       // Ambil token dari local storage
-      const token = localStorage.getItem('token'); // Pastikan key-nya 'token', sesuai gambar Anda
+      const token = Cookies.get('token'); // Pastikan key-nya 'token', sesuai gambar Anda
 
       // Jika token ada, tambahkan ke header Authorization
       if (token) {

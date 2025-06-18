@@ -31,7 +31,8 @@ const wordLimitation = (content: string, counter: number) => {
   return truncated.length === content.length ? truncated : `${truncated}...`;
 };
 
-export default function Articles() {
+// UBAH NAMA FUNGSI DI SINI
+export default function ArticlesClientComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -44,18 +45,16 @@ export default function Articles() {
 
   const debouncedSearchQuery = useDebounce(searchInput, 500);
 
-  // --- LOGIKA YANG DIPERBAIKI ---
+  // --- LOGIKA ANDA SUDAH BAIK ---
 
-  // 1. useEffect INI HANYA UNTUK MENGAMBIL DATA BERDASARKAN URL SAAT INI
-  // Ini akan berjalan saat komponen dimuat pertama kali DAN setiap kali searchParams berubah (karena filter atau paginasi)
   useEffect(() => {
     const getArticlesData = async () => {
       try {
-        // Buat params langsung dari searchParams yang ada di URL
         const params = new URLSearchParams(searchParams.toString());
         const response = await api.get(`/articles?${params.toString()}`);
         setArticles(response.data.data);
-        setTotalArticles(response.data.total);
+        // Pastikan Anda menggunakan key yang benar dari respons API Anda
+        setTotalArticles(response.data.totalData || response.data.total || 0);
       } catch (error) {
         console.error("Failed to fetch articles:", error);
         setArticles([]);
@@ -64,19 +63,15 @@ export default function Articles() {
     };
     
     getArticlesData();
-  }, [searchParams]); // <-- Dependensi yang paling penting!
+  }, [searchParams]);
 
-  // 2. useEffect INI HANYA UNTUK MENGUBAH URL KETIKA FILTER DIUBAH PENGGUNA
-  // Ini akan memperbarui URL, yang kemudian akan memicu useEffect di atas untuk mengambil data.
   useEffect(() => {
-    // Jangan jalankan pada render awal jika state filter sama dengan yang ada di URL
-    // Ini untuk menghindari pembaruan URL yang tidak perlu saat halaman dimuat
     if (debouncedSearchQuery === (searchParams.get('search') || '') && selectedCategory === (searchParams.get('category') || '')) {
       return;
     }
 
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', '1'); // Selalu reset ke halaman 1 saat filter berubah
+    params.set('page', '1');
 
     if (debouncedSearchQuery) {
       params.set('search', debouncedSearchQuery);
@@ -89,14 +84,12 @@ export default function Articles() {
     } else {
       params.delete('category');
     }
-
-    // Ganti URL tanpa me-reload halaman. Ini akan memicu useEffect pertama.
-    router.replace(`?${params.toString()}`);
+    
+    router.replace(`/admin/articles?${params.toString()}`);
     
   }, [debouncedSearchQuery, selectedCategory, router, searchParams]); 
 
 
-  // Fetch Categories (tidak berubah)
   useEffect(() => {
     const getCategoriesList = async() => {
       try {
@@ -124,6 +117,7 @@ export default function Articles() {
 
 
   return (
+    // ... JSX Anda sama persis, tidak perlu diubah ...
     <>
       <div className=" bg-white py-10">
         <p className="pb-5 px-5 text-gray-700">
@@ -158,6 +152,7 @@ export default function Articles() {
         </div>
 
         <table className="min-w-full border-collapse border border-gray-200 my-5 text-center">
+          {/* ... Isi tabel ... */}
           <thead>
             <tr className="bg-gray-100 text-gray-700 uppercase text-sm">
               <th className="border-y border-gray-300 px-4 py-2 ">Thumbnails</th>
@@ -177,11 +172,12 @@ export default function Articles() {
                 <tr key={article.id} className="hover:bg-gray-50 border-b border-gray-200">
                   <td className="border-y border-gray-300 px-4 py-2 flex items-center justify-center">
                     <Image
-                      src={article.imageUrl}
+                      src={article.imageUrl || '/path/to/default-image.png'} // Sediakan fallback jika imageUrl null
                       alt={article.title}
                       width={100}
                       height={100}
                       className="object-cover rounded"
+                      onError={(e) => { e.currentTarget.src = '/path/to/default-image.png'; }} // Fallback jika link gambar rusak
                     />
                   </td>
                   <td className="border-y border-gray-300 px-4 py-2 ">{wordLimitation(article.title, 30)}</td>

@@ -8,6 +8,7 @@ import categoriesLogo from '@/../public/categoriesLogo.svg'
 import logoutLogo from '@/../public/logoutLogo.svg'
 import logoLight from '@/../public/logoipsum-light.svg'
 import Swal from 'sweetalert2';
+import Cookies from 'js-cookie';
 export default function Sidebar(){
     const pathname = usePathname();
     const router = useRouter()
@@ -21,8 +22,10 @@ export default function Sidebar(){
         reverseButtons: true,
       }).then((result) => {
         if (result.isConfirmed) {
-          localStorage.clear(); // Clear all local storage
-          router.push('/login') // Redirect to login page
+          Cookies.remove('token');
+          Cookies.remove('role')
+          Cookies.remove('password')
+          router.push('/login') 
         }
       });
     };

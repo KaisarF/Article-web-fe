@@ -8,18 +8,20 @@ import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
 
 
+import placeholderImage from '@/../public/uploadImg.svg'; // Ganti dengan path ke gambar placeholder Anda
+
 interface Article {
   id: string;
   title: string;
   content: string;
-  imageUrl?: string;
+  imageUrl?: string; // Opsional
   user: { username: string };
   category: { name: string };
   createdAt: string;
 }
 
 const wordLimitation = (content: string, counter: number) => {
-  if (!content) return ''; // Tambahkan penjagaan jika content null/undefined
+  if (!content) return '';
   const truncated = content.slice(0, counter);
   return truncated.length === content.length ? truncated : `${truncated}...`;
 };
@@ -31,45 +33,40 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
     const unwrappedParams = use(params);  
     const detail = unwrappedParams.preview;
 
-
-
     const [articles, setArticles] = useState<Article[]>([]);
  
-    
     const getArticlesData = async () => {
         try {
-        const response = await api.get(`/articles`);
-        setArticles(response.data.data);
-
+            const response = await api.get(`/articles`);
+            setArticles(response.data.data);
         } catch (error) {
-        console.error("Failed to fetch articles:", error);
-
-        setArticles([]);
-
+            console.error("Failed to fetch articles:", error);
+            setArticles([]);
         }
     };
 
     useEffect(() => {
         const getArticleDetail = async () => {
-        setLoading(true);
-        setError(null);
-        getArticlesData()
-        try {
-            const response = await api.get(`/articles/${detail}`);
-            setArticle(response.data);
-        } catch (err) {
-            setError(`Failed to fetch article data: ${err}`);
-        } finally {
-            setLoading(false);
-        }
+            setLoading(true);
+            setError(null);
+            getArticlesData();
+            try {
+                const response = await api.get(`/articles/${detail}`);
+                setArticle(response.data);
+            } catch (error) { // Tangani error dengan lebih aman
+                setError(`Failed to fetch article data: ${error}`);
+            } finally {
+                setLoading(false);
+            }
         };
-        getArticleDetail();
+        if(detail) { // Pastikan detail ada sebelum fetch
+            getArticleDetail();
+        }
     }, [detail]);
 
     const otherArticles = useMemo(() => {
         return articles.filter((a) => a.id !== article?.id);
     }, [articles, article]);
-
 
     const randomOtherArticles = useMemo(() => {
         const shuffled = [...otherArticles].sort(() => 0.5 - Math.random());
@@ -95,57 +92,59 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
         </p>
         <h1 className="text-3xl font-bold text-center mb-8">{article.title}</h1>
 
-        
+        {/* <<< PERBAIKAN 1: Conditional Rendering untuk Gambar Utama */}
+        {article.imageUrl && (
             <Image
-            src={article.imageUrl}
-            alt={article.title}
-            width={1120}
-            height={480}
-            className="w-full rounded-lg shadow-md mb-10 object-cover"
-            style={{ maxHeight: '400px' }}
+                src={article.imageUrl  || placeholderImage}
+                alt={article.title}
+                width={1120}
+                height={480}
+                className="w-full rounded-lg shadow-md mb-10 object-cover"
+                style={{ maxHeight: '400px' }}
+                priority // Tambahkan priority untuk gambar LCP (Largest Contentful Paint)
             />
+        )}
         
-
         <article
             className="prose prose-lg max-w-none text-gray-700"
             dangerouslySetInnerHTML={{ __html: article.content }}
         />
         <div className=' px-5 pt-10 flex justify-center content-center flex-col'>
-        <h1 className=' bold'>Other Articles</h1>
+            <h1 className='font-bold text-2xl'>Other Articles</h1>
             
             <div className=" py-5 justify-center content-center grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 h-full">
                 {randomOtherArticles.length === 0 ? (
-                <p>No articles available.</p>
+                    <p>No other articles available.</p>
                 ) : (
-                
-                randomOtherArticles.map(article => (
-                    <Link key={article.id} className="bg-white overflow-hidden h-[432px]" href={`/user/articles/${article.id}`} >
-                        <Image
-                            src={article.imageUrl}
-                            alt={article.title}
-                            width={387}
-                            height={240}
-                            className="object-cover w-[387px] h-[240px] text-black rounded-2xl"
-                          />
-                    <div className="h-[176px] py-5 flex flex-col justify-between">
-                        <div>
-                        <p className="text-sm text-gray-600">
-                            {new Date(article.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            })}
-                        </p>
-                        <h4 className="text-xl font-bold text-[#0F172A]">{wordLimitation(article.title, 20)}</h4>
-                        <div
-                            className="prose text-[#475569]"
-                            dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 100) }}
-                        />
-                        </div>
-                        <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> {wordLimitation(article.category?.name || 'Unknown', 10)}</p>
-                    </div>
-                    </Link>
-                ))
+                    randomOtherArticles.map(articleItem => (
+                        <Link key={articleItem.id} className="bg-white overflow-hidden h-[432px]" href={`/user/articles/${articleItem.id}`} >
+                            {/* <<< PERBAIKAN 2: Sediakan Placeholder untuk Gambar Lainnya */}
+                            <Image
+                                src={articleItem.imageUrl || placeholderImage}
+                                alt={articleItem.title}
+                                width={387}
+                                height={240}
+                                className="object-cover w-[387px] h-[240px] text-black rounded-2xl"
+                            />
+                            <div className="h-[176px] py-5 flex flex-col justify-between">
+                                <div>
+                                <p className="text-sm text-gray-600">
+                                    {new Date(articleItem.createdAt).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    })}
+                                </p>
+                                <h4 className="text-xl font-bold text-[#0F172A]">{wordLimitation(articleItem.title, 20)}</h4>
+                                <div
+                                    className="prose text-[#475569]"
+                                    dangerouslySetInnerHTML={{ __html: wordLimitation(articleItem.content, 100) }}
+                                />
+                                </div>
+                                <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> {wordLimitation(articleItem.category?.name || 'Unknown', 10)}</p>
+                            </div>
+                        </Link>
+                    ))
                 )}
             </div>
         </div>

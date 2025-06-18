@@ -4,25 +4,55 @@ import api from "@/app/axios";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
+import Cookies from 'js-cookie';
+// <<< PERBAIKAN 1: Buat interface untuk mendefinisikan bentuk data pengguna
+interface UserData {
+  username: string;
+  role: string;
+  // Tambahkan properti lain jika ada, contoh: email: string;
+}
+
 export default function Profile() {
 
-  const [userData, SetUserData] = useState ('')
+  
+  const [userData, setUserData] = useState<UserData | null>(null);
+  
+  useEffect(() => {
+    // Fungsi untuk mengambil data dari API
+    const getUserData = async () => {
+      try {
+        const response = await api.get('/auth/profile');
+        setUserData(response.data); 
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        
+      }
+    };
+    getUserData();
+    
 
-  const GetUserData = async()=>{
-    const response = await api.get('/auth/profile')
-    SetUserData(response.data)
+  }, []); 
 
+  const userPassword = Cookies.get('password');
+  if (!userData) {
+    return (
+      <div className="flex flex-col min-h-screen w-full">
+        <Navbar/>
+        <div className="flex-grow flex items-center justify-center">
+          <p>Loading profile...</p>
+        </div>
+        <Footer/>
+      </div>
+    );
   }
 
-  useEffect(()=>{
-    GetUserData()
-  },[])
-  const initial = userData.username?.charAt(0).toUpperCase() || '';
-  const userPassword = localStorage.getItem('password')
+  // Hitung initial setelah memastikan userData ada
+  const initial = userData.username.charAt(0).toUpperCase();
+
   return (
     <div className="flex flex-col min-h-screen w-full">
       <Navbar/>
-        <div className="flex-grow flex flex-col items-center justify-center bg-white p-4 min-h-full">
+      <div className="flex-grow flex flex-col items-center justify-center bg-white p-4 min-h-full">
         <h1 className="text-xl font-semibold mb-6">User Profile</h1>
 
         <div className="flex flex-col items-center mb-6">
@@ -31,7 +61,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className=" h-full max-w-sm bg-white shadow-md rounded-md">
+        <div className="w-full max-w-sm bg-white shadow-md rounded-md">
           <table className="w-full table-fixed border-collapse">
             <tbody>
               <tr className="border-b">
@@ -39,10 +69,11 @@ export default function Profile() {
                 <td className="p-3 text-gray-900">:</td>
                 <td className="p-3 text-gray-900">{userData.username}</td>
               </tr>
-              <tr className="border-b my-4 py-5">
+              <tr className="border-b">
                 <td className="p-3 font-medium text-gray-700 text-left">Password</td>
                 <td className="p-3 text-gray-900">:</td>
-                <td className="p-3 text-gray-900">{userPassword}</td>
+                <td className="p-3 text-gray-900">{userPassword}</td> 
+
               </tr>
               <tr>
                 <td className="p-3 font-medium text-gray-700 text-left">Role</td>
@@ -54,6 +85,6 @@ export default function Profile() {
         </div>
       </div>
       <Footer/>
-      </div>
-    );
+    </div>
+  );
 }

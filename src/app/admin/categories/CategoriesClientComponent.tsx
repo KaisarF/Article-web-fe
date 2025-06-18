@@ -15,9 +15,10 @@ interface Category {
   createdAt:string;
 }
 
-export default function Categories() {
+// Ubah nama fungsi dari 'Categories' menjadi 'CategoriesClientComponent'
+export default function CategoriesClientComponent() {
+    const searchParams = useSearchParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
   
   const page = Number(searchParams.get('page')) || 1;
   const pageSize = Number(searchParams.get('pageSize')) || 10;
@@ -63,27 +64,29 @@ export default function Categories() {
   };
 
   useEffect(() => {
-    getCategoryData(page, pageSize, searchQuery, selectedCategory);
-  }, [page, pageSize, searchQuery, selectedCategory]);
-
-  useEffect(() => {
+    // Saat komponen pertama kali mount, baca search params dari URL
+    // lalu panggil getCategoryData
     const urlSearch = searchParams.get('search') || '';
     const urlCategory = searchParams.get('category') || '';
     setSearchQuery(urlSearch);
     setSelectedCategory(urlCategory);
-  }, [searchParams]);
+    getCategoryData(page, pageSize, urlSearch, urlCategory);
+  }, [page, pageSize, searchParams]); // Jadikan searchParams sebagai dependency
 
   // Handler search submit
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    // Reset ke halaman 1 dan update params URL dengan search dan category lengkap
-    const params = new URLSearchParams();
+    
+    // Update URL tanpa me-reload halaman penuh
+    const params = new URLSearchParams(searchParams.toString());
     params.set('page', '1');
-    params.set('pageSize', pageSize.toString());
-    if (value) params.set('search', value);
-    if (selectedCategory) params.set('category', selectedCategory);
-    router.replace(`?${params.toString()}`);
+    if (value) {
+      params.set('search', value);
+    } else {
+      params.delete('search');
+    }
+    router.push(`?${params.toString()}`);
   };
 
   const openAddModal = () => {
@@ -134,59 +137,55 @@ export default function Categories() {
     }
   };
 
-  // Handler category change
-  
-
-// const initial = userData?.username.charAt(0).toUpperCase() || '';
+  // ... sisa kode Anda sama persis ...
   return (
     <>
-    <div className=" bg-white py-10">
-            <p className="pb-5 px-5 text-gray-700">
-              Total Articles:  {totalCategories}
-            </p>
-            <div className='flex justify-between flex-row items-center p-6 border-2 border-[#E2E8F0]'>
-              <div className="flex justify-center space-x-4 w-100">
-                  
-
-                  <input
-                    type="text"
-                    className="flex-grow p-2 rounded-md border w-20 border-gray-300 text-gray-700 bg-white"
-                    placeholder="Search articles"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                  />
-                </div>
-                <button onClick={openAddModal} className='px-4 py-2 bg-blue-600 text-white rounded-md'>+ Add Category</button>
-            </div>
-            {/* Add Modal */}
-      {showAddModal && (
-        <div
-          className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
-          onClick={() => setShowAddModal(false)} // Optional: close modal by clicking outside
-        >
+      <div className=" bg-white py-10">
+              <p className="pb-5 px-5 text-gray-700">
+                Total Categories:  {totalCategories}
+              </p>
+              <div className='flex justify-between flex-row items-center p-6 border-2 border-[#E2E8F0]'>
+                <div className="flex justify-center space-x-4 w-100">
+                    <input
+                      type="text"
+                      className="flex-grow p-2 rounded-md border w-full sm:w-80 border-gray-300 text-gray-700 bg-white"
+                      placeholder="Search categories..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                    />
+                  </div>
+                  <button onClick={openAddModal} className='px-4 py-2 bg-blue-600 text-white rounded-md'>+ Add Category</button>
+              </div>
+              {/* Add Modal */}
+        {showAddModal && (
           <div
-            className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+            className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
+            onClick={() => setShowAddModal(false)}
           >
-            <h2 className='text-[#0F172A] text-[20px] font-bold'>Add Category</h2>
-            <div className='flex flex-col gap-2'>
-              <label htmlFor="text" className='font-semibold'>Category</label>
-              <input
-                type="text"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                placeholder="Category name"
-                className='w-full px-4 py-3 border-1 rounded-xl'
-              />  
-            </div>
-            <div className='flex flex-row items-center gap-2 justify-end'>
-              <button onClick={() => setShowAddModal(false)} className='py-2 px-4 border-1 rounded-xl'>Cancel</button>
-              <button onClick={handleAddCategory} className='py-2 px-4 border-1 rounded-xl bg-[#2563EB] text-white'>Add</button>
+            <div
+              className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className='text-[#0F172A] text-[20px] font-bold'>Add Category</h2>
+              <div className='flex flex-col gap-2'>
+                <label htmlFor="text" className='font-semibold'>Category</label>
+                <input
+                  type="text"
+                  value={categoryName}
+                  onChange={(e) => setCategoryName(e.target.value)}
+                  placeholder="Category name"
+                  className='w-full px-4 py-3 border-1 rounded-xl'
+                />  
+              </div>
+              <div className='flex flex-row items-center gap-2 justify-end'>
+                <button onClick={() => setShowAddModal(false)} className='py-2 px-4 border-1 rounded-xl'>Cancel</button>
+                <button onClick={handleAddCategory} className='py-2 px-4 border-1 rounded-xl bg-[#2563EB] text-white'>Add</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-      {showEditModal && currentCategory && (
+        )}
+        {/* ... sisa kode modal dan tabel Anda ... */}
+         {showEditModal && currentCategory && (
         <div
           className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
           onClick={() => setShowEditModal(false)} // Optional: close modal by clicking outside
@@ -281,9 +280,6 @@ export default function Categories() {
               page={page}
               pageSize={pageSize}
               totalCount={totalCategories} 
-              // pageSizeSelectOptions={{
-              //   pageSizeOptions: [5, 10, 25, 50],
-              // }}
               />
           </div>
     </>

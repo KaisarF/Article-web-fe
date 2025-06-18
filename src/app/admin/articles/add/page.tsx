@@ -9,6 +9,12 @@ import Swal from 'sweetalert2';
 import arrow from "@/../public/arrowLeft.svg"
 import uploadImg from '@/../public/uploadImg.svg'
  
+
+interface Category {
+    id: number | string; // Bisa number atau string, sesuaikan dengan API Anda
+    name: string;
+}
+
  export default function AddArticles(){
     const router = useRouter();
 
@@ -21,7 +27,7 @@ import uploadImg from '@/../public/uploadImg.svg'
         content: '',
         categoryId: ''
     });
-    const [categoriesList, setCategoriesList] = useState([]);
+    const [categoriesList, setCategoriesList] = useState<Category[]>([]);
     
     // 2. State untuk menampung pesan error validasi
     const [errors, setErrors] = useState<{ title?: string; content?: string; categoryId?: string; image?: string }>({});

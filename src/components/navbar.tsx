@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import api from '@/app/axios';
 import Swal from 'sweetalert2';
-
+import Cookies from 'js-cookie';
 interface UserData {
   id: string | number;
   username: string;
@@ -67,7 +67,9 @@ export default function Navbar({ isDarkMode = false }: NavbarProps) {
       reverseButtons: true,
     }).then((result) => {
       if (result.isConfirmed) {
-        localStorage.clear();
+        Cookies.remove('token');
+    Cookies.remove('role');
+    Cookies.remove('password');
         router.push('/login');
       }
     });
@@ -75,23 +77,18 @@ export default function Navbar({ isDarkMode = false }: NavbarProps) {
 
   const isPreviewPage = pathname.startsWith('/admin/articles/preview');
 
-  // <<< BARU: Buat fungsi handler untuk klik pada username
   const handleUsernameClick = () => {
     if (isPreviewPage) {
-      // Jika di halaman preview, arahkan ke profil admin
       router.push('/admin/profile');
     } else {
-      // Jika di halaman lain, tampilkan/sembunyikan modal
       setShowModal(!showModal);
     }
   };
 
   const handleLogoClick = ()=>{
     if (isPreviewPage) {
-      // Jika di halaman preview, arahkan ke profil admin
       router.push('/admin/articles');
     } else {
-      // Jika di halaman lain, tampilkan/sembunyikan modal
       router.push('/user/articles');
     }
   }
@@ -99,9 +96,9 @@ export default function Navbar({ isDarkMode = false }: NavbarProps) {
   return (
     <div className=" pt-5 w-full h-24 flex flex-row justify-between px-5 md:px-20 sm:px-10 items-center relative">
       {isDarkMode ? (
-        <Image src={logoLight} alt="logo ipsum" className="" />
+        <Image onClick={handleLogoClick} src={logoLight} alt="logo ipsum" className="" />
       ) : (
-        <Image src={logoDark} alt="logo ipsum" className="" />
+        <Image onClick={handleLogoClick} src={logoDark} alt="logo ipsum" className="" />
       )}
       <div className="flex flex-row gap-4 justify-center items-center relative">
         <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-lg">

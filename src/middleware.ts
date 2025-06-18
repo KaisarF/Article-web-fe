@@ -11,43 +11,39 @@ export function middleware(request: NextRequest) {
   // 2. Daftar rute publik yang bisa diakses tanpa login
   const publicPaths = ['/login', '/register'];
 
-  // Jika user sudah login (punya token)
+
   if (token) {
-    // Jika user sudah login dan mencoba mengakses halaman login/register,
-    // redirect mereka ke dashboard sesuai role
+
     if (publicPaths.includes(pathname)) {
-      if (role === 'admin') {
-        return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+      if (role === 'Admin') {
+        return NextResponse.redirect(new URL('/admin/articles', request.url));
       }
-      if (role === 'user') {
-        return NextResponse.redirect(new URL('/user/profile', request.url));
+      if (role === 'User') {
+        return NextResponse.redirect(new URL('/user/articles', request.url));
       }
     }
 
-    // 3. Logika proteksi rute berdasarkan role
-    // Jika role adalah 'admin'
-    if (role === 'admin') {
-      // Jika admin mencoba mengakses rute user, redirect ke dashboard admin
+    if (role === 'Admin') {
+
       if (pathname.startsWith('/user')) {
-        return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-      }
-    }
-    
-    // Jika role adalah 'user'
-    if (role === 'user') {
-      // Jika user mencoba mengakses rute admin, redirect ke dashboard user
-      if (pathname.startsWith('/admin')) {
-        return NextResponse.redirect(new URL('/user/profile', request.url));
+        return NextResponse.redirect(new URL('/admin/articles', request.url));
       }
     }
 
-    // Jika user mengakses root ('/'), redirect sesuai role
-    if (pathname === '/') {
-       if (role === 'admin') {
-        return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+    if (role === 'User') {
+
+      if (pathname.startsWith('/admin')) {
+        return NextResponse.redirect(new URL('/user/articles', request.url));
       }
-      if (role === 'user') {
-        return NextResponse.redirect(new URL('/user/profile', request.url));
+    }
+
+
+    if (pathname === '/') {
+       if (role === 'Admin') {
+        return NextResponse.redirect(new URL('/admin/articles', request.url));
+      }
+      if (role === 'User') {
+        return NextResponse.redirect(new URL('/user/articles', request.url));
       }
     }
 

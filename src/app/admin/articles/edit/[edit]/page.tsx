@@ -6,7 +6,21 @@ import Link from "next/link";
 import Image from "next/image";
 import arrow from "@/../public/arrowLeft.svg";
 import { useRouter } from 'next/navigation';
-import Swal from 'sweetalert2'; // <-- 1. Import Swal
+import Swal from 'sweetalert2';
+
+// <<< PERBAIKAN 1: Definisikan interface untuk data Anda
+interface Category {
+    id: number | string;
+    name: string;
+}
+
+interface ArticleData {
+    id: number | string;
+    title: string;
+    content: string;
+    categoryId: number | string;
+    imageUrl: string;
+}
 
 export default function EditArticles({ params }: { params: Promise<{ edit: string }> }){
     const router = useRouter();
@@ -18,11 +32,12 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
         content: '',
         categoryId: ''
     });
-    const [categoriesList, setCategoriesList] = useState([]);
-    const [currentData, setCurrentData] = useState(null);
+    
+    // <<< PERBAIKAN 2: Terapkan interface pada state
+    const [categoriesList, setCategoriesList] = useState<Category[]>([]);
+    const [currentData, setCurrentData] = useState<ArticleData | null>(null);
+    
     const [isLoading, setIsLoading] = useState(true);
-
-    // <-- 2. State baru untuk menampung error validasi
     const [errors, setErrors] = useState<{ title?: string; content?: string; categoryId?: string }>({});
 
     const unwrappedParams = use(params);
@@ -30,19 +45,22 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
 
     useEffect(() => {
         const fetchData = async () => {
+            setIsLoading(true); // Pastikan loading state aktif
             try {
                 const [articleRes, categoriesRes] = await Promise.all([
                     api.get(`/articles/${currentArticleId}`),
                     api.get('/categories')
                 ]);
-                const articleData = articleRes.data;
+                
+                const articleData: ArticleData = articleRes.data; // TypeScript sekarang tahu bentuk datanya
                 setCurrentData(articleData);
                 setCategoriesList(categoriesRes.data.data);
+                
                 if (articleData) {
                     setFormData({
                         title: articleData.title,
                         content: articleData.content,
-                        categoryId: articleData.categoryId,
+                        categoryId: String(articleData.categoryId), // Pastikan categoryId adalah string untuk select
                     });
                 }
             } catch (error) {
@@ -65,12 +83,17 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
             setSelectedFile(file);
+            
+            // Hapus URL objek lama jika ada untuk mencegah memory leak
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
+
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
         }
     }
 
-    // <-- 3. Fungsi validasi
     const validateForm = () => {
         const newErrors: { title?: string; content?: string; categoryId?: string } = {};
 
@@ -85,18 +108,23 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
         }
 
         setErrors(newErrors);
-        // Mengembalikan true jika tidak ada error, false jika ada error
         return Object.keys(newErrors).length === 0;
     };
 
     async function handleUpdate() {
-        // Jalankan validasi, jika gagal, hentikan fungsi
         if (!validateForm()) {
             return;
         }
 
+        // <<< PERBAIKAN 3: Gunakan non-null assertion (!) karena kita tahu currentData tidak null di sini
+        if (!currentData) {
+            Swal.fire({ icon: 'error', title: 'Error', text: 'Article data is missing.' });
+            return;
+        }
+
         try {
-            let imageUrl = currentData.imageUrl;
+            let imageUrl = currentData.imageUrl; 
+            
             if (selectedFile) {
                 const uploadFormData = new FormData();
                 uploadFormData.append('image', selectedFile);
@@ -115,7 +143,6 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
             
             await api.put(`/articles/${currentArticleId}`, articleDataToUpdate);
             
-            // <-- 4. Gunakan Swal untuk notifikasi sukses
             Swal.fire({
                 icon: 'success',
                 title: 'Success!',
@@ -128,11 +155,10 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
 
         } catch (error) {
             console.error("Update failed:", error);
-            // <-- 5. Gunakan Swal untuk notifikasi gagal
             Swal.fire({
                 icon: 'error',
                 title: 'Update Failed',
-                text: error.response?.data?.message || 'An unexpected error occurred. Please try again.',
+                text: `An unexpected error occurred. Please try again: ${error}`,
             });
         }
     }
@@ -142,7 +168,7 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
     }
 
     if (!currentData) {
-        return <div className="w-full text-center p-10">Article not found.</div>;
+        return <div className="w-full text-center p-10">Article not found or failed to load.</div>;
     }
 
     return (
@@ -154,7 +180,6 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
                 <p> Edit Article </p>
             </div>
             
-            {/* Thumbnails */}
             <div className="mb-6">
                 <label className="block text-m font-medium text-gray-700 mb-1">Thumbnail</label>
                 <label
@@ -174,25 +199,21 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
                     />
                 </label>
                 {selectedFile && (
-                    <p className="mt-2 text-m text-gray-600">File baru: {selectedFile.name}</p>
+                    <p className="mt-2 text-m text-gray-600">New file: {selectedFile.name}</p>
                 )}
             </div>
 
-            {/* Title */}
             <div className="mb-4">
                 <label htmlFor="title" className="block text-m font-medium text-gray-700 mb-1">Title</label>
                 <input
                     id="title" type="text"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    // <-- 6. Tambahkan style border merah jika ada error
                     className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
                 />
-                {/* <-- 7. Tampilkan pesan error di bawah input */}
                 {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
 
-            {/* Category */}
             <div className="mb-6">
                 <label htmlFor="category" className="block text-m font-medium text-gray-700 mb-1">Category</label>
                 <select
@@ -201,7 +222,8 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
                     onChange={(e) => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
                     className={`w-full border rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.categoryId ? 'border-red-500' : 'border-gray-300'}`}
                 >
-                    <option value="" disabled>Pilih Kategori</option>
+                    <option value="" disabled>Select Category</option>
+                    {/* TypeScript sekarang tahu 'cat' adalah tipe 'Category' */}
                     {categoriesList.map(cat => (
                         <option key={cat.id} value={cat.id}>
                             {cat.name}
@@ -215,7 +237,6 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
                 </p>
             </div>
 
-            {/* Content */}
             <div className="mb-6">
                 <label htmlFor="content" className="block text-m font-medium text-gray-700 mb-1">Content</label>
                 <textarea
@@ -227,7 +248,6 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
                 {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
             </div>
 
-            {/* Buttons */}
             <div className="flex justify-end space-x-3">
                 <Link href="/admin/articles" passHref>
                     <button type="button" className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100">
