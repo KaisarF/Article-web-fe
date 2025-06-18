@@ -1,4 +1,4 @@
-"use server"; // Wajib untuk menandai ini sebagai file Server Actions
+"use client"; 
 
 
 import { redirect } from 'next/navigation';
@@ -16,10 +16,9 @@ type LoginState = {
 };
 
 export async function loginAction(
-  previousState: LoginState, 
+  previousState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
-
   const rawData = {
     username: formData.get("username"),
     password: formData.get("password"),
@@ -32,31 +31,43 @@ export async function loginAction(
       errors: validatedFields.error.flatten().fieldErrors,
     };
   }
-  
-  try {
-    const response = await api.post('/auth/login', validatedFields.data);
 
+  try {
+    console.log(validatedFields.data)
+    for (const key of formData.keys()) {
+  console.log('FormData key:', key);
+}
+    const response = await api.post('/auth/login',{
+        username: formData.get("username"),
+        password: formData.get("password"),
+    });
     const { token, role } = response.data;
 
-    Cookies.set('token',token,{expires:7});
-    Cookies.set('role',role,{expires:7});
-    Cookies.set('password',validatedFields.data.password,{expires:7});
+    // Periksa jika response tidak sesuai dengan yang diharapkan
+    if (!token || !role) {
+      throw new Error("Invalid response from server.");
+    }
+
+    // Simpan token dan role di cookies
+    Cookies.set('token', token, { expires: 7 });
+    Cookies.set('role', role, { expires: 7 });
 
   } catch (error) {
-    // Tangani jika API mengembalikan error (misal: 401 Unauthorized)
-    console.error(`Login API Error: ${error}`);
+    console.error("Login API Error:", error);
+
+    // Berikan pesan kesalahan yang lebih informatif
     return {
       message: "Invalid username or password. Please try again.",
     };
   }
 
-  // 5. Jika semua berhasil, redirect pengguna dari server
+  // Redirect berdasarkan role yang ada
   const roleFromCookie = Cookies.get('role');
   if (roleFromCookie === 'Admin') {
     redirect('/admin/articles');
   } else if (roleFromCookie === 'User') {
     redirect('/user/articles');
   } else {
-    redirect('/login'); 
+    redirect('/login');
   }
 }

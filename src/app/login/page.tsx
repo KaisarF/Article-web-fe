@@ -69,7 +69,7 @@ export default function Login() {
 
             <button
               type='submit'
-              disabled={isPending} // Gunakan isPending dari useActionState
+              disabled={isPending} 
               className='w-full bg-[#2563EB] h-10 rounded-md mt-5 text-white font-semibold disabled:bg-blue-300 disabled:cursor-not-allowed'
             >
               {isPending ? "Logging in..." : "Login"}
