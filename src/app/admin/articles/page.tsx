@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 import api from '@/app/axios';
@@ -32,6 +32,13 @@ const wordLimitation = (content: string, counter: number) => {
 };
 
 export default function Articles() {
+  return (
+      <Suspense fallback={<div>Loading...</div>}>
+        <ArticlesContent />
+      </Suspense>
+    );
+  }
+  function ArticlesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   

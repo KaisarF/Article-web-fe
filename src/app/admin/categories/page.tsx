@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 // import Sidebar from '@/components/sidebar';
@@ -16,6 +16,13 @@ interface Category {
 }
 
 export default function Categories() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CategoriesContent />
+    </Suspense>
+  );
+}
+function CategoriesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   

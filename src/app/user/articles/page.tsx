@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 import bgImg from "../../../../public/bg-dashboard.jpg";
@@ -34,6 +34,14 @@ const wordLimitation = (content: string, counter: number) => {
 };
 
 export default function Articles() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ArticlesContent />
+    </Suspense>
+  );
+}
+
+function ArticlesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -47,7 +55,6 @@ export default function Articles() {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
 
-  // Fetch articles with pagination, search, filter
   const getArticlesData = async (
     currentPage: number, 
     limit: number, 
@@ -72,7 +79,6 @@ export default function Articles() {
     }
   };
 
-  // Fetch categories
   const getCategoriesList = async() => {
     try {
       const response = await api.get('/categories');
@@ -82,7 +88,6 @@ export default function Articles() {
     }
   };
 
-  // Fetch user data (optional, dari kode Anda)
   const getUserData = async () => {
     try {
       const response = await api.get('/auth/profile');
@@ -92,50 +97,43 @@ export default function Articles() {
     }
   };
 
-  // Effect to fetch categories once
   useEffect(() => {
     getCategoriesList();
     getUserData();
   }, []);
 
-  // Effect to fetch articles whenever page, pageSize, searchQuery, or selectedCategory berubah
   useEffect(() => {
     getArticlesData(page, pageSize, searchQuery, selectedCategory);
   }, [page, pageSize, searchQuery, selectedCategory]);
 
   useEffect(() => {
-  const urlSearch = searchParams.get('search') || '';
-  const urlCategory = searchParams.get('category') || '';
-  setSearchQuery(urlSearch);
-  setSelectedCategory(urlCategory);
-}, [searchParams]);
+    const urlSearch = searchParams.get('search') || '';
+    const urlCategory = searchParams.get('category') || '';
+    setSearchQuery(urlSearch);
+    setSelectedCategory(urlCategory);
+  }, [searchParams]);
 
-  // Handler search submit
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value;
-  setSearchQuery(value);
-  // Reset ke halaman 1 dan update params URL dengan search dan category lengkap
-  const params = new URLSearchParams();
-  params.set('page', '1');
-  params.set('pageSize', pageSize.toString());
-  if (value) params.set('search', value);
-  if (selectedCategory) params.set('category', selectedCategory);
-  router.replace(`?${params.toString()}`);
-};
+    const value = e.target.value;
+    setSearchQuery(value);
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    params.set('pageSize', pageSize.toString());
+    if (value) params.set('search', value);
+    if (selectedCategory) params.set('category', selectedCategory);
+    router.replace(`?${params.toString()}`);
+  };
 
-
-  // Handler category change
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const value = e.target.value;
-  setSelectedCategory(value);
-  const params = new URLSearchParams();
-  params.set('page', '1');
-  params.set('pageSize', pageSize.toString());
-  if (searchQuery) params.set('search', searchQuery);
-  if (value) params.set('category', value);
-  router.replace(`?${params.toString()}`);
-};
-
+    const value = e.target.value;
+    setSelectedCategory(value);
+    const params = new URLSearchParams();
+    params.set('page', '1');
+    params.set('pageSize', pageSize.toString());
+    if (searchQuery) params.set('search', searchQuery);
+    if (value) params.set('category', value);
+    router.replace(`?${params.toString()}`);
+  };
 
   return (
     <>
