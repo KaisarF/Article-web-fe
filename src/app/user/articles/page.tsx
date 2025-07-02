@@ -183,14 +183,14 @@ function ArticlesContent() {
             Showing: {pageSize} of {totalArticles} articles
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 h-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 mb-10 gap-8 h-full">
             {articles.length === 0 ? (
               <p>No articles available.</p>
             ) : (
               articles.map(article => (
                 <Link 
                   key={article.id} 
-                  className="bg-white overflow-hidden h-[432px] rounded-md shadow-md hover:shadow-lg transition-shadow"
+                  className="bg-white overflow-hidden h-[432px] rounded-md shadow-md hover:shadow-lg transition-shadow "
                   href={`/user/articles/${article.id}`}
                 >
                   <Image
@@ -214,7 +214,7 @@ function ArticlesContent() {
                       </h4>
                       <div
                         className="prose text-[#475569]"
-                        dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 100) }}
+                        dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 70) }}
                       />
                     </div>
                     <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> 

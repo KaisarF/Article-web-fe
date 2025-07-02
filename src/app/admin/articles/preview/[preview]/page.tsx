@@ -8,7 +8,7 @@ import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
 
 
-import placeholderImage from '@/../public/uploadImg.svg'; // Ganti dengan path ke gambar placeholder Anda
+import placeholderImage from '@/../public/uploadImg.svg'; 
 
 interface Article {
   id: string;
@@ -65,7 +65,7 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
     }, [detail]);
 
     const otherArticles = useMemo(() => {
-        return articles.filter((a) => a.id !== article?.id);
+        return articles.filter((a) => a.id !== article?.id && a.category.name === article?.category.name);
     }, [articles, article]);
 
     const randomOtherArticles = useMemo(() => {
@@ -92,7 +92,7 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
         </p>
         <h1 className="text-3xl font-bold text-center mb-8">{article.title}</h1>
 
-        {/* <<< PERBAIKAN 1: Conditional Rendering untuk Gambar Utama */}
+        
         {article.imageUrl && (
             <Image
                 src={article.imageUrl  || placeholderImage}
@@ -101,7 +101,7 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
                 height={480}
                 className="w-full rounded-lg shadow-md mb-10 object-cover"
                 style={{ maxHeight: '400px' }}
-                priority // Tambahkan priority untuk gambar LCP (Largest Contentful Paint)
+                priority 
             />
         )}
         
@@ -118,7 +118,7 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
                 ) : (
                     randomOtherArticles.map(articleItem => (
                         <Link key={articleItem.id} className="bg-white overflow-hidden h-[432px]" href={`/user/articles/${articleItem.id}`} >
-                            {/* <<< PERBAIKAN 2: Sediakan Placeholder untuk Gambar Lainnya */}
+                            
                             <Image
                                 src={articleItem.imageUrl || placeholderImage}
                                 alt={articleItem.title}

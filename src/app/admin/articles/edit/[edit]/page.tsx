@@ -4,264 +4,202 @@ import api from "@/app/axios";
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import arrow from "@/../public/arrowLeft.svg";
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
+import arrow from "@/../public/arrowLeft.svg";
+import uploadImg from '@/../public/uploadImg.svg';
+import 'react-quill-new/dist/quill.snow.css';
+import dynamic from 'next/dynamic';
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
-// <<< PERBAIKAN 1: Definisikan interface untuk data Anda
 interface Category {
-    id: number | string;
-    name: string;
+  id: number | string;
+  name: string;
 }
 
 interface ArticleData {
-    id: number | string;
-    title: string;
-    content: string;
-    categoryId: number | string;
-    imageUrl: string;
+  id: number | string;
+  title: string;
+  content: string;
+  categoryId: number | string;
+  imageUrl: string;
 }
 
 export default function EditArticles({ params }: { params: Promise<{ edit: string }> }){
-    const router = useRouter();
+  const router = useRouter();
+  const unwrapped = use(params);
+  const articleId = unwrapped.edit;
 
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-    const [formData, setFormData] = useState({
-        title: '',
-        content: '',
-        categoryId: ''
-    });
-    
-    // <<< PERBAIKAN 2: Terapkan interface pada state
-    const [categoriesList, setCategoriesList] = useState<Category[]>([]);
-    const [currentData, setCurrentData] = useState<ArticleData | null>(null);
-    
-    const [isLoading, setIsLoading] = useState(true);
-    const [errors, setErrors] = useState<{ title?: string; content?: string; categoryId?: string }>({});
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [current, setCurrent] = useState<ArticleData|null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    const unwrappedParams = use(params);
-    const currentArticleId = unwrappedParams.edit;
 
-    useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true); // Pastikan loading state aktif
-            try {
-                const [articleRes, categoriesRes] = await Promise.all([
-                    api.get(`/articles/${currentArticleId}`),
-                    api.get('/categories')
-                ]);
-                
-                const articleData: ArticleData = articleRes.data; // TypeScript sekarang tahu bentuk datanya
-                setCurrentData(articleData);
-                setCategoriesList(categoriesRes.data.data);
-                
-                if (articleData) {
-                    setFormData({
-                        title: articleData.title,
-                        content: articleData.content,
-                        categoryId: String(articleData.categoryId), // Pastikan categoryId adalah string untuk select
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to fetch data:", error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Load Failed',
-                    text: 'Could not load article data. Please try again later.',
-                });
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        if (currentArticleId) {
-            fetchData();
-        }
-    }, [currentArticleId]);
+  const [selectedFile, setSelectedFile] = useState<File|null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string|null>(null);
+  const [removedImage, setRemovedImage] = useState(false);
 
-    function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-        if (e.target.files && e.target.files.length > 0) {
-            const file = e.target.files[0];
-            setSelectedFile(file);
-            
-            // Hapus URL objek lama jika ada untuk mencegah memory leak
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
+  const [form, setForm] = useState({ title: '', content: '', categoryId: '' });
+  const [errors, setErrors] = useState<{ title?: string; content?: string; categoryId?: string; image?: string }>({});
 
-            const url = URL.createObjectURL(file);
-            setPreviewUrl(url);
-        }
+  useEffect(() => {
+    async function fetchAll() {
+      setIsLoading(true);
+      try {
+        const [artRes, catRes] = await Promise.all([
+          api.get(`/articles/${articleId}`),
+          api.get('/categories')
+        ]);
+        const art: ArticleData = artRes.data;
+        setCurrent(art);
+        setCategories(catRes.data.data);
+        setForm({
+          title: art.title,
+          content: art.content,
+          categoryId: String(art.categoryId)
+        });
+      } catch (e) {
+        console.error(e);
+        Swal.fire({ icon:'error', title:'Load Failed', text:'Could not load data.' });
+      } finally { setIsLoading(false); }
+    }
+    if (articleId) fetchAll();
+  }, [articleId]);
+
+  const validate = () => {
+    const errs: typeof errors = {};
+    if (!form.title.trim()) errs.title = 'Title is required.';
+    if (!form.content.trim()) errs.content = 'Content is required.';
+    if (!form.categoryId) errs.categoryId = 'Category must be selected.';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.files?.length) {
+      const file = e.target.files[0];
+      setSelectedFile(file);
+
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+      setPreviewUrl(URL.createObjectURL(file));
+      setRemovedImage(false);
+      setErrors(prev => ({ ...prev, image: undefined }));
+    }
+  }
+  
+  const handleDeleteImage = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setPreviewUrl(null);
+    setSelectedFile(null);
+    setRemovedImage(true);
+  };
+
+  async function handleUpdate() {
+    if (!validate()) return;
+    if (!current) {
+      Swal.fire({ icon:'error', title:'Error', text:'No article data.'});
+      return;
     }
 
-    const validateForm = () => {
-        const newErrors: { title?: string; content?: string; categoryId?: string } = {};
+    try {
+      let imageUrl = current.imageUrl;
+      if (removedImage) {
+        imageUrl = '';
+      }
+      if (selectedFile) {
+        const fd = new FormData(); fd.append('image', selectedFile);
+        const up = await api.post('/upload', fd, { headers: {'Content-Type':'multipart/form-data'} });
+        imageUrl = up.data.imageUrl;
+      }
 
-        if (!formData.title.trim()) {
-            newErrors.title = 'Title is required.';
-        }
-        if (!formData.content.trim()) {
-            newErrors.content = 'Content is required.';
-        }
-        if (!formData.categoryId) {
-            newErrors.categoryId = 'Category must be selected.';
-        }
+      await api.put(`/articles/${articleId}`, {
+        title: form.title,
+        content: form.content,
+        categoryId: form.categoryId,
+        imageUrl
+      });
 
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
-    };
+      Swal.fire({ icon:'success', title:'Updated!', text:'Article updated.', timer:2000, showConfirmButton:false })
+        .then(() => router.push('/admin/articles'));
 
-    async function handleUpdate() {
-        if (!validateForm()) {
-            return;
-        }
-
-        // <<< PERBAIKAN 3: Gunakan non-null assertion (!) karena kita tahu currentData tidak null di sini
-        if (!currentData) {
-            Swal.fire({ icon: 'error', title: 'Error', text: 'Article data is missing.' });
-            return;
-        }
-
-        try {
-            let imageUrl = currentData.imageUrl; 
-            
-            if (selectedFile) {
-                const uploadFormData = new FormData();
-                uploadFormData.append('image', selectedFile);
-                const response = await api.post('/upload', uploadFormData, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-                imageUrl = response.data.imageUrl;
-            }
-
-            const articleDataToUpdate = {
-                title: formData.title,
-                content: formData.content,
-                categoryId: formData.categoryId,
-                imageUrl,
-            };
-            
-            await api.put(`/articles/${currentArticleId}`, articleDataToUpdate);
-            
-            Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: 'Article has been updated successfully.',
-                timer: 2000,
-                showConfirmButton: false,
-            }).then(() => {
-                router.push('/admin/articles');
-            });
-
-        } catch (error) {
-            console.error("Update failed:", error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Update Failed',
-                text: `An unexpected error occurred. Please try again: ${error}`,
-            });
-        }
+    } catch (e) {
+      console.error(e);
+      Swal.fire({ icon:'error', title:'Update Failed', text:String(e) });
     }
+  }
 
-    if (isLoading) {
-        return <div className="w-full text-center p-10">Loading article data...</div>;
-    }
+  const resetForm = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setRemovedImage(false);
+    if (current) setForm({ title: current.title, content: current.content, categoryId: String(current.categoryId) });
+    setErrors({});
+  };
 
-    if (!currentData) {
-        return <div className="w-full text-center p-10">Article not found or failed to load.</div>;
-    }
+  if (isLoading) return <div className="w-full text-center p-10">Loading...</div>;
+  if (!current) return <div className="w-full text-center p-10">Article not found.</div>;
 
-    return (
-        <div className="w-full mx-auto p-6 bg-white rounded-md shadow-md">
-            <div className="flex flex-row items-center gap-2 text-m mb-5">
-                <Link href={'/admin/articles'}>
-                    <Image src={arrow} alt="arrow" width={30} height={30} />
-                </Link>
-                <p> Edit Article </p>
+  return (
+    <div className="w-full mx-auto p-6 bg-white rounded-md shadow-md">
+      <div className="flex items-center gap-2 mb-5">
+        <Link href="/admin/articles"><Image src={arrow} alt="back" width={30} height={30}/></Link>
+        <p>Edit Article</p>
+      </div>
+
+      {/* Thumbnail */}
+      <div className="mb-6">
+        <label className="block mb-1 font-medium">Thumbnail</label>
+        {previewUrl || (current.imageUrl && !removedImage) ? (
+          <div className="w-80 p-2 border rounded-md">
+            <div className="relative w-full h-44">
+              <Image src={previewUrl||current.imageUrl} alt="Preview" fill className="object-contain rounded-md"/>
             </div>
-            
-            <div className="mb-6">
-                <label className="block text-m font-medium text-gray-700 mb-1">Thumbnail</label>
-                <label
-                    htmlFor="fileInput"
-                    className="flex flex-col items-center justify-center w-80 h-44 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-gray-400"
-                >
-                    {previewUrl ? (
-                        <Image src={previewUrl} width={100} height={100} alt="New Preview" className="object-contain p-2" />
-                    ) : currentData.imageUrl ? (
-                        <Image src={currentData.imageUrl} width={100} height={100} alt="Current Thumbnail" className="object-contain p-2" />
-                    ) : (
-                        <span className="text-xs text-gray-500 text-center">Click to select a file</span>
-                    )}
-                    <input
-                        id="fileInput" type="file" accept=".jpg,.jpeg,.png"
-                        onChange={handleFileChange} className="hidden"
-                    />
-                </label>
-                {selectedFile && (
-                    <p className="mt-2 text-m text-gray-600">New file: {selectedFile.name}</p>
-                )}
+            <div className="mt-2 flex justify-center gap-4 text-sm">
+              <label htmlFor="fileInput" className="underline cursor-pointer">Change</label>
+              <button onClick={handleDeleteImage} className="underline text-red-600">Delete</button>
             </div>
+          </div>
+        ) : (
+          <label htmlFor="fileInput" className={`flex flex-col items-center justify-center w-80 h-44 border-2 rounded-md cursor-pointer ${errors.image? 'border-red-500':'border-gray-300'}`}>
+            <Image src={uploadImg} alt="upload" width={30} height={30}/>
+            <span className="text-xs mt-2 text-gray-500 text-center">Click to select a file<br/>JPG, PNG</span>
+          </label>
+        )}
+        <input id="fileInput" type="file" accept=".jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
+        {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
+      </div>
 
-            <div className="mb-4">
-                <label htmlFor="title" className="block text-m font-medium text-gray-700 mb-1">Title</label>
-                <input
-                    id="title" type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
-            </div>
+      {/* Title */}
+      <div className="mb-4">
+        <label htmlFor="title" className="block mb-1 font-medium">Title</label>
+        <input id="title" value={form.title} onChange={e=>setForm({...form,title:e.target.value})}
+          className={`w-full border rounded px-3 py-2 ${errors.title?'border-red-500':'border-gray-300'}`} />
+        {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
+      </div>
 
-            <div className="mb-6">
-                <label htmlFor="category" className="block text-m font-medium text-gray-700 mb-1">Category</label>
-                <select
-                    id="category"
-                    value={formData.categoryId}
-                    onChange={(e) => setFormData(prev => ({ ...prev, categoryId: e.target.value }))}
-                    className={`w-full border rounded-md px-3 py-2 bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.categoryId ? 'border-red-500' : 'border-gray-300'}`}
-                >
-                    <option value="" disabled>Select Category</option>
-                    {/* TypeScript sekarang tahu 'cat' adalah tipe 'Category' */}
-                    {categoriesList.map(cat => (
-                        <option key={cat.id} value={cat.id}>
-                            {cat.name}
-                        </option>
-                    ))}
-                </select>
-                {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId}</p>}
-                <p className="text-xs text-gray-500 mt-1">
-                    The existing category list can be seen in the{' '}
-                    <Link href={'/admin/categories'} className="underline text-blue-600 hover:text-blue-700">category</Link> menu
-                </p>
-            </div>
+      {/* Category */}
+      <div className="mb-6">
+        <label htmlFor="cat" className="block mb-1 font-medium">Category</label>
+        <select id="cat" value={form.categoryId} onChange={e=>setForm({...form,categoryId:e.target.value})}
+          className={`w-full border rounded px-3 py-2 ${errors.categoryId?'border-red-500':'border-gray-300'}`}>
+          <option value="" disabled>Select category</option>
+          {categories.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+        {errors.categoryId && <p className="text-red-500 text-xs mt-1">{errors.categoryId}</p>}
+      </div>
 
-            <div className="mb-6">
-                <label htmlFor="content" className="block text-m font-medium text-gray-700 mb-1">Content</label>
-                <textarea
-                    id="content" rows={10}
-                    value={formData.content}
-                    onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                    className={`w-full border rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.content ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
-            </div>
+      {/* Content */}
+      <div className="mb-6">
+        <label htmlFor="content" className="block mb-1 font-medium">Content</label>
+        <ReactQuill value={form.content} onChange={v=>setForm({...form,content:v})} className={`${errors.content?'border-red-500':'border-gray-300'} rounded`} />
+        {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
+      </div>
 
-            <div className="flex justify-end space-x-3">
-                <Link href="/admin/articles" passHref>
-                    <button type="button" className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100">
-                        Cancel
-                    </button>
-                </Link>
-                <button
-                    type="button"
-                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
-                    onClick={handleUpdate}
-                >
-                    Save Changes
-                </button>
-            </div>
-        </div>
-    )
+      <div className="flex justify-end space-x-3">
+        <button onClick={resetForm} className="px-4 py-2 border rounded">Cancel</button>
+        <button onClick={handleUpdate} className="px-4 py-2 bg-blue-600 text-white rounded">Save Changes</button>
+      </div>
+    </div>
+  );
 }
