@@ -11,5 +11,5 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
       username: z.string().trim().min(1, { message: "Please enter your username" }),
-        password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+      password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 }) 

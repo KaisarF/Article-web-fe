@@ -3,10 +3,10 @@
 
 import { redirect } from 'next/navigation';
 
-import api from '@/app/axios'; // Pastikan path ini benar dan instance axios dikonfigurasi
-import { loginSchema } from '@/lib/rules'; // Impor skema Zod untuk login
+import api from '@/app/axios'; 
+import { loginSchema } from '@/lib/rules'; 
 import Cookies from 'js-cookie';
-// Tipe untuk state yang akan dikembalikan oleh action
+
 type LoginState = {
   errors?: {
     username?: string[];
@@ -38,24 +38,24 @@ export async function loginAction(
   console.log('FormData key:', key);
 }
     const response = await api.post('/auth/login',{
-        username: formData.get("username"),
-        password: formData.get("password"),
+        username: validatedFields.data.username,
+        password: validatedFields.data.password,
     });
     const { token, role } = response.data;
 
-    // Periksa jika response tidak sesuai dengan yang diharapkan
+    
     if (!token || !role) {
       throw new Error("Invalid response from server.");
     }
 
-    // Simpan token dan role di cookies
+    Cookies.set('password',validatedFields.data.password)
     Cookies.set('token', token, { expires: 7 });
     Cookies.set('role', role, { expires: 7 });
 
   } catch (error) {
     console.error("Login API Error:", error);
 
-    // Berikan pesan kesalahan yang lebih informatif
+
     return {
       message: "Invalid username or password. Please try again.",
     };

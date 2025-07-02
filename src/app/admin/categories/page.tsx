@@ -34,7 +34,7 @@ function CategoriesContent() {
   const [listCategories, setListCategories] = useState<Category[]>([]);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -70,26 +70,25 @@ function CategoriesContent() {
   };
 
   useEffect(() => {
-    getCategoryData(page, pageSize, searchQuery, selectedCategory);
-  }, [page, pageSize, searchQuery, selectedCategory]);
+    getCategoryData(page, pageSize, searchQuery,);
+  }, [page, pageSize, searchQuery, ]);
 
   useEffect(() => {
     const urlSearch = searchParams.get('search') || '';
-    const urlCategory = searchParams.get('category') || '';
+    
     setSearchQuery(urlSearch);
-    setSelectedCategory(urlCategory);
+    
   }, [searchParams]);
 
-  // Handler search submit
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchQuery(value);
-    // Reset ke halaman 1 dan update params URL dengan search dan category lengkap
+
     const params = new URLSearchParams();
     params.set('page', '1');
     params.set('pageSize', pageSize.toString());
     if (value) params.set('search', value);
-    if (selectedCategory) params.set('category', selectedCategory);
     router.replace(`?${params.toString()}`);
   };
 
@@ -113,7 +112,7 @@ function CategoriesContent() {
     try {
       await api.post('/categories', { name: categoryName });
       setShowAddModal(false);
-      getCategoryData(page, pageSize, searchQuery, selectedCategory);
+      getCategoryData(page, pageSize, searchQuery);
     } catch (error) {
       console.error("Add category failed", error);
     }
@@ -124,7 +123,7 @@ function CategoriesContent() {
     try {
       await api.put(`/categories/${currentCategory.id}`, { name: categoryName });
       setShowEditModal(false);
-      getCategoryData(page, pageSize, searchQuery, selectedCategory);
+      getCategoryData(page, pageSize, searchQuery);
     } catch (error) {
       console.error("Edit category failed", error);
     }
@@ -135,7 +134,7 @@ function CategoriesContent() {
     try {
       await api.delete(`/categories/${currentCategory.id}`);
       setShowDeleteModal(false);
-      getCategoryData(page, pageSize, searchQuery, selectedCategory);
+      getCategoryData(page, pageSize, searchQuery);
     } catch (error) {
       console.error("Delete category failed", error);
     }
@@ -196,7 +195,7 @@ function CategoriesContent() {
       {showEditModal && currentCategory && (
         <div
           className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
-          onClick={() => setShowEditModal(false)} // Optional: close modal by clicking outside
+          onClick={() => setShowEditModal(false)} 
         >
           <div
             className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"

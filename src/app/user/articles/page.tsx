@@ -46,7 +46,7 @@ function ArticlesContent() {
   const searchParams = useSearchParams();
   
   const page = Number(searchParams.get('page')) || 1;
-  const pageSize = Number(searchParams.get('pageSize')) || 5;
+  const pageSize = Number(searchParams.get('pageSize')) || 9;
 
   const [articles, setArticles] = useState<Article[]>([]);
   const [totalArticles, setTotalArticles] = useState(0);
@@ -66,7 +66,7 @@ function ArticlesContent() {
       params.append('page', currentPage.toString());
       params.append('limit', limit.toString());
       
-      if (search) params.append('search', search);
+      if (search) params.append('title', search);
       if (category) params.append('category', category);
 
       const response = await api.get(`/articles?${params.toString()}`);
@@ -230,9 +230,9 @@ function ArticlesContent() {
             page={page}
             pageSize={pageSize}
             totalCount={totalArticles} 
-            pageSizeSelectOptions={{
-              pageSizeOptions: [5, 10, 25, 50],
-            }}
+            // pageSizeSelectOptions={{
+            //   pageSizeOptions: [5, 10, 25, 50],
+            // }}
             />
         </div>
           <Footer/>

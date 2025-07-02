@@ -38,7 +38,7 @@ export default function Login() {
               placeholder='Input username'
               className='px-3 py-1 border-2 border-[#E2E8F0] text-[#64748B] rounded-md'
             />
-            {/* Tampilkan error validasi dari state */}
+            
             {state.errors?.username && (
               <p className="text-red-500 text-sm mt-1">{state.errors.username[0]}</p>
             )}

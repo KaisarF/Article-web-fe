@@ -8,8 +8,9 @@ import { useRouter } from "next/navigation";
 import Swal from 'sweetalert2';
 import arrow from "@/../public/arrowLeft.svg"
 import uploadImg from '@/../public/uploadImg.svg'
- 
-
+import 'react-quill-new/dist/quill.snow.css';
+import dynamic from 'next/dynamic';
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false })
 interface Category {
     id: number | string; // Bisa number atau string, sesuaikan dengan API Anda
     name: string;
@@ -29,10 +30,8 @@ interface Category {
     });
     const [categoriesList, setCategoriesList] = useState<Category[]>([]);
     
-    // 2. State untuk menampung pesan error validasi
     const [errors, setErrors] = useState<{ title?: string; content?: string; categoryId?: string; image?: string }>({});
 
-    // Mengambil data kategori saat komponen dimuat
     useEffect(() => {
         const getCategories = async () => {
             try {
@@ -145,8 +144,8 @@ interface Category {
                 </Link>
                 <p> Create Article </p>
             </div>
-             
-            {/* 5. Bagian Thumbnail yang sudah dimodifikasi */}
+            
+            
             <div className="mb-6">
                 <label className="block text-m font-medium text-gray-700 mb-1">Thumbnail</label>
                 {previewUrl ? (
@@ -160,9 +159,9 @@ interface Category {
                                 className="object-contain rounded-md"
                             />
                         </div>
-                        <div className="mt-2 flex items-center justify-end gap-4 text-sm">
+                        <div className="mt-2 flex items-center justify-center gap-4 text-sm">
                             <label htmlFor="fileInput" className="text-blue-600 underline cursor-pointer hover:text-blue-800">
-                                Change
+                                Changes
                             </label>
                             <button onClick={handleDeleteImage} className="text-red-600 underline hover:text-red-800">
                                 Delete
@@ -170,7 +169,7 @@ interface Category {
                         </div>
                     </div>
                 ) : (
-                    // Tampilan SEBELUM gambar dipilih
+                    
                     <label
                         htmlFor="fileInput"
                         className={`flex flex-col items-center justify-center w-80 h-44 border-2 border-dashed rounded-md cursor-pointer hover:border-gray-400 ${errors.image ? 'border-red-500' : 'border-gray-300'}`}
@@ -183,7 +182,7 @@ interface Category {
                         </span>
                     </label>
                 )}
-                {/* Input file yang selalu disembunyikan */}
+                
                 <input
                     id="fileInput"
                     type="file"
@@ -194,7 +193,7 @@ interface Category {
                 {errors.image && <p className="text-red-500 text-xs mt-1">{errors.image}</p>}
             </div>
 
-            {/* Title */}
+            
             <div className="mb-4">
                 <label htmlFor="title" className="block text-m font-medium text-gray-700 mb-1">Title</label>
                 <input
@@ -205,7 +204,7 @@ interface Category {
                 {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
             </div>
 
-            {/* Category */}
+            
             <div className="mb-6">
                 <label htmlFor="category" className="block text-m font-medium text-gray-700 mb-1">Category</label>
                 <select
@@ -227,18 +226,20 @@ interface Category {
                 </p>
             </div>
 
-            {/* Content */}
-            <div className="mb-6">
+            
+            <div className="mb-20 h-30 ">
                 <label htmlFor="content" className="block text-m font-medium text-gray-700 mb-1">Content</label>
-                <textarea
-                    id="content" rows={10} placeholder="Type a content..." value={formData.content}
-                    onChange={(e) => setFormData(prev => ({...prev, content: e.target.value}))}
-                    className={`w-full border rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.content ? 'border-red-500' : 'border-gray-300'}`}
+                <ReactQuill
+                    id="content"  
+                    placeholder="Type a content..." 
+                    value={formData.content}
+                    onChange={(value) => setFormData(prev => ({...prev, content:value}))}
+                    className={`w-full  h-full rounded-md px-3 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.content ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
             </div>
 
-            {/* Buttons */}
+            
             <div className="flex justify-end space-x-3">
                 <button
                     type="button"

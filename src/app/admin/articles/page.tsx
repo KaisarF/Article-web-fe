@@ -51,14 +51,11 @@ export default function Articles() {
 
   const debouncedSearchQuery = useDebounce(searchInput, 500);
 
-  // --- LOGIKA YANG DIPERBAIKI ---
-
-  // 1. useEffect INI HANYA UNTUK MENGAMBIL DATA BERDASARKAN URL SAAT INI
-  // Ini akan berjalan saat komponen dimuat pertama kali DAN setiap kali searchParams berubah (karena filter atau paginasi)
+  
   useEffect(() => {
     const getArticlesData = async () => {
       try {
-        // Buat params langsung dari searchParams yang ada di URL
+        
         const params = new URLSearchParams(searchParams.toString());
         const response = await api.get(`/articles?${params.toString()}`);
         setArticles(response.data.data);
@@ -71,24 +68,20 @@ export default function Articles() {
     };
     
     getArticlesData();
-  }, [searchParams]); // <-- Dependensi yang paling penting!
-
-  // 2. useEffect INI HANYA UNTUK MENGUBAH URL KETIKA FILTER DIUBAH PENGGUNA
-  // Ini akan memperbarui URL, yang kemudian akan memicu useEffect di atas untuk mengambil data.
+  }, [searchParams]);
   useEffect(() => {
-    // Jangan jalankan pada render awal jika state filter sama dengan yang ada di URL
-    // Ini untuk menghindari pembaruan URL yang tidak perlu saat halaman dimuat
+
     if (debouncedSearchQuery === (searchParams.get('search') || '') && selectedCategory === (searchParams.get('category') || '')) {
       return;
     }
 
     const params = new URLSearchParams(searchParams.toString());
-    params.set('page', '1'); // Selalu reset ke halaman 1 saat filter berubah
+    params.set('page', '1');
 
     if (debouncedSearchQuery) {
-      params.set('search', debouncedSearchQuery);
+      params.set('title', debouncedSearchQuery);
     } else {
-      params.delete('search');
+      params.delete('title');
     }
 
     if (selectedCategory) {
@@ -97,13 +90,12 @@ export default function Articles() {
       params.delete('category');
     }
 
-    // Ganti URL tanpa me-reload halaman. Ini akan memicu useEffect pertama.
+
     router.replace(`?${params.toString()}`);
     
   }, [debouncedSearchQuery, selectedCategory, router, searchParams]); 
 
 
-  // Fetch Categories (tidak berubah)
   useEffect(() => {
     const getCategoriesList = async() => {
       try {
