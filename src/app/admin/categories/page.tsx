@@ -43,7 +43,6 @@ function CategoriesContent() {
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
 
-  // Fetch articles with pagination, search, filter
   const getCategoryData = async (
     currentPage: number, 
     limit: number, 
@@ -140,9 +139,6 @@ function CategoriesContent() {
     }
   };
 
-  // Handler category change
-  
-
 // const initial = userData?.username.charAt(0).toUpperCase() || '';
   return (
     <>
@@ -168,11 +164,11 @@ function CategoriesContent() {
       {showAddModal && (
         <div
           className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
-          onClick={() => setShowAddModal(false)} // Optional: close modal by clicking outside
+          onClick={() => setShowAddModal(false)}
         >
           <div
             className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+            onClick={(e) => e.stopPropagation()} 
           >
             <h2 className='text-[#0F172A] text-[20px] font-bold'>Add Category</h2>
             <div className='flex flex-col gap-2'>
@@ -199,7 +195,7 @@ function CategoriesContent() {
         >
           <div
             className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside modal
+            onClick={(e) => e.stopPropagation()} 
           >
             <h2 className='text-[#0F172A] text-[20px] font-bold'>Edit Category</h2>
             <div className='flex flex-col gap-2'>
@@ -272,8 +268,8 @@ function CategoriesContent() {
                       <td className="border-y border-gray-300 px-4 py-2">
                         <div className="flex gap-4 text-sm items-center justify-center">
                           
-                          <button onClick={() => openEditModal(category)}>Edit</button>
-                          <button onClick={() => openDeleteModal(category)}>Delete</button>
+                          <button className='text-[#2563EB] underline' onClick={() => openEditModal(category)}>Edit</button>
+                          <button className='text-[#EF4444] underline' onClick={() => openDeleteModal(category)}>Delete</button>
                         </div>
                       </td>
                     </tr>

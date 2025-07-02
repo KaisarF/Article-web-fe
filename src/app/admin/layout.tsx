@@ -7,10 +7,9 @@ import NavbarAdmin from '@/components/navbarAdmin';
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Check if the current path is under preview pages
+
   const isPreviewPage = pathname.startsWith('/admin/articles/preview');
 if (isPreviewPage) {
-    // No wrapper, no sidebar/navbar, no styles applied
     return <>{children}</>;
   }
   return (

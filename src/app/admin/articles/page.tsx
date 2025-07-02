@@ -8,7 +8,7 @@ import api from '@/app/axios';
 import { useDebounce } from '@/app/hooks/useDebounce'; 
 import { PaginationWithLinks } from "@/components/ui/pagination-with-links";
 
-// Interface tidak berubah
+
 interface Category {
   id: string;
   name: string;

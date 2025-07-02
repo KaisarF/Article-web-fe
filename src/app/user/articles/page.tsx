@@ -139,22 +139,22 @@ function ArticlesContent() {
     <>
       <div className="h-full bg-white">
         <div 
-          className="w-full h-[500px] bg-cover bg-center" 
+          className="w-full h-[850px]  sm:h-[500px] bg-cover bg-center" 
           style={{ backgroundImage: `url(${bgImg.src})` }}
         >
           <div className="bg-[#2563EBDB]/[86%] w-full h-full">
             <Navbar isDarkMode={true}/>
-            <div className="h-max flex flex-col items-center justify-center text-center px-20 py-10 space-y-4">
+            <div className="sm:h-max h-full flex flex-col items-center justify-center text-center px-20 sm:pb-10  space-y-4">
               <h3 className="text-white font-semibold">Blog genzet</h3>
               <h1 className="text-white text-4xl md:text-5xl font-bold max-w-4xl">
                 The Journal : Design Resources, Interviews, and Industry News
               </h1>
-              <h2 className="text-white text-xl">Your daily dose of design insights!</h2>
+              <h2 className="text-white text-base sm:text-xl">Your daily dose of design insights!</h2>
 
               {/* Search & Filter */}
-              <div className="flex justify-center space-x-4 w-full max-w-3xl mt-6 bg-[#3B82F6] p-2 rounded-md">
+              <div className="flex justify-center flex-col sm:flex-row  gap-3 space-x-4 w-full max-w-3xl mt-6 bg-[#3B82F6] p-2 rounded-md">
                 <select
-                  className="p-2 rounded-md border border-gray-300 text-gray-700 bg-white"
+                  className="p-2 rounded-md w-full sm:w-fit border border-gray-300 text-gray-700 bg-white"
                   value={selectedCategory}
                   onChange={handleCategoryChange}
                 >
@@ -168,7 +168,7 @@ function ArticlesContent() {
 
                 <input
                   type="text"
-                  className="flex-grow p-2 rounded-md border border-gray-300 text-gray-700 bg-white"
+                  className="sm:flex-grow w-full p-2 rounded-md border border-gray-300 text-gray-700 bg-white"
                   placeholder="Search articles"
                   value={searchQuery}
                   onChange={handleSearchChange}

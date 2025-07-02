@@ -12,14 +12,13 @@ import 'react-quill-new/dist/quill.snow.css';
 import dynamic from 'next/dynamic';
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false })
 interface Category {
-    id: number | string; // Bisa number atau string, sesuaikan dengan API Anda
+    id: number | string;
     name: string;
 }
 
  export default function AddArticles(){
     const router = useRouter();
 
-    // 1. Mengubah state untuk menangani satu file, bukan array
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     
@@ -44,7 +43,6 @@ interface Category {
         getCategories();
     }, []);
 
-    // 3. Fungsi untuk validasi form
     const validateForm = () => {
         const newErrors: { title?: string; content?: string; categoryId?: string; image?: string } = {};
 
@@ -57,25 +55,22 @@ interface Category {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Fungsi untuk handle perubahan file
     function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target.files && e.target.files.length > 0) {
             const file = e.target.files[0];
             setSelectedFile(file);
 
-            // Jika ada URL preview sebelumnya, hapus untuk mencegah memory leak
             if (previewUrl) {
                 URL.revokeObjectURL(previewUrl);
             }
 
             const url = URL.createObjectURL(file);
             setPreviewUrl(url);
-            // Hapus error gambar jika ada
+
             if(errors.image) setErrors(prev => ({ ...prev, image: undefined }));
         }
     }
     
-    // 4. Fungsi untuk menghapus gambar yang dipilih
     const handleDeleteImage = () => {
         if (previewUrl) {
             URL.revokeObjectURL(previewUrl);
@@ -84,14 +79,12 @@ interface Category {
         setPreviewUrl(null);
     };
 
-    // Fungsi untuk mengunggah
     async function handleUpload() {
         if (!validateForm()) {
-            return; // Hentikan jika validasi gagal
+            return;
         }
 
         try {
-            // Upload gambar terlebih dahulu
             const imageFormData = new FormData();
             imageFormData.append('image', selectedFile!);
             const uploadResponse = await api.post('/upload', imageFormData, {
@@ -99,7 +92,6 @@ interface Category {
             });
             const imageUrl = uploadResponse.data.imageUrl;
 
-            // Siapkan data artikel untuk dikirim
             const articleData = {
                 title: formData.title,
                 content: formData.content,
@@ -129,7 +121,6 @@ interface Category {
         }
     }
     
-    // Fungsi untuk mereset form
     const resetForm = () => {
         handleDeleteImage();
         setFormData({ title: '', content: '', categoryId: '' });
@@ -149,7 +140,6 @@ interface Category {
             <div className="mb-6">
                 <label className="block text-m font-medium text-gray-700 mb-1">Thumbnail</label>
                 {previewUrl ? (
-                    // Tampilan SETELAH gambar dipilih
                     <div className="w-80 p-2 border border-gray-300 rounded-md">
                         <div className="relative w-full h-44">
                             <Image

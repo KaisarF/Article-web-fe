@@ -5,11 +5,10 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import Cookies from 'js-cookie';
-// <<< PERBAIKAN 1: Buat interface untuk mendefinisikan bentuk data pengguna
+
 interface UserData {
   username: string;
   role: string;
-  // Tambahkan properti lain jika ada, contoh: email: string;
 }
 
 export default function Profile() {
@@ -46,7 +45,6 @@ export default function Profile() {
     );
   }
 
-  // Hitung initial setelah memastikan userData ada
   const initial = userData.username.charAt(0).toUpperCase();
 
   return (
@@ -61,23 +59,23 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="w-full max-w-sm bg-white shadow-md rounded-md">
-          <table className="w-full table-fixed border-collapse">
+        <div className=" w-[350px] sm:w-full max-w-sm bg-white shadow-md rounded-md">
+          <table className="w-full table-fixed border-collapse text-sm sm:text-base p-3">
             <tbody>
               <tr className="border-b">
                 <td className="p-3 font-medium text-gray-700 text-left w-32">Username</td>
-                <td className="p-3 text-gray-900">:</td>
+                <td className="px-3 text-gray-900">:</td>
                 <td className="p-3 text-gray-900">{userData.username}</td>
               </tr>
               <tr className="border-b">
                 <td className="p-3 font-medium text-gray-700 text-left">Password</td>
-                <td className="p-3 text-gray-900">:</td>
+                <td className="px-3 text-gray-900">:</td>
                 <td className="p-3 text-gray-900">{userPassword}</td> 
 
               </tr>
               <tr>
                 <td className="p-3 font-medium text-gray-700 text-left">Role</td>
-                <td className="p-3 text-gray-900">:</td>
+                <td className="px-3 text-gray-900">:</td>
                 <td className="p-3 text-gray-900">{userData.role}</td>
               </tr>
             </tbody>

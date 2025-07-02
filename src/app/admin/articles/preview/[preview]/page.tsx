@@ -14,7 +14,7 @@ interface Article {
   id: string;
   title: string;
   content: string;
-  imageUrl?: string; // Opsional
+  imageUrl?: string; 
   user: { username: string };
   category: { name: string };
   createdAt: string;
@@ -53,13 +53,13 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
             try {
                 const response = await api.get(`/articles/${detail}`);
                 setArticle(response.data);
-            } catch (error) { // Tangani error dengan lebih aman
+            } catch (error) { 
                 setError(`Failed to fetch article data: ${error}`);
             } finally {
                 setLoading(false);
             }
         };
-        if(detail) { // Pastikan detail ada sebelum fetch
+        if(detail) { 
             getArticleDetail();
         }
     }, [detail]);
