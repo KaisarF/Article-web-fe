@@ -31,7 +31,7 @@ export default function Navbar({ isDarkMode = false }: NavbarProps) {
       setUserData(response.data);
     } catch (error) {
       console.error("Failed to fetch user data:", error);
-      // Mungkin redirect ke login jika token tidak valid
+      
     }
   };
 

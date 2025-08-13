@@ -1,13 +1,15 @@
 'use client'
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 import api from '@/app/axios';
 import { useDebounce } from '@/app/hooks/useDebounce'; 
 import { PaginationWithLinks } from "@/components/ui/pagination-with-links";
-
+import { Select, SelectTrigger, SelectValue ,SelectContent, SelectGroup,SelectLabel, SelectItem} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 
 interface Category {
   id: string;
@@ -39,25 +41,55 @@ export default function Articles() {
     );
   }
   function ArticlesContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    
+    const [articles, setArticles] = useState<Article[]>([]);
+    const [totalArticles, setTotalArticles] = useState(0);
+    const [listCategories, setListCategories] = useState<Category[]>([]);
+    
+    const page = Number(searchParams.get('page')) || 1;
+    const pageSize = Number(searchParams.get('pageSize')) || 10;
+  const debounceRef = useRef<number | null>(null);
+  const [searchValue, setSearchValue] = useState("");
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState(searchValue);
+  const [categoryValue, setCategoryValue] = useState("")
   
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [totalArticles, setTotalArticles] = useState(0);
-  const [listCategories, setListCategories] = useState<Category[]>([]);
-  
-  const [searchInput, setSearchInput] = useState<string>(searchParams.get('search') || '');
-  const [selectedCategory, setSelectedCategory] = useState<string>(searchParams.get('category') || '');
+  const handleSearchDebounced = (query:string) => {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+        debounceRef.current = window.setTimeout(() => {
+            getArticlesData(page, pageSize, query, categoryValue);
+        }, 500);
+    };
+    useEffect(() => {
+    
+    const handler = setTimeout(() => {
+      setDebouncedSearchValue(searchValue);
+    }, 500);
 
-  const debouncedSearchQuery = useDebounce(searchInput, 500);
-
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchValue]);
   
-  useEffect(() => {
-    const getArticlesData = async () => {
+
+    const getArticlesData = async (
+      page: number, 
+      limit: number, 
+      search :string, 
+      category :string
+    ) => {
       try {
+        const queryParams = {
+          title:search,
+          category: category,
+          page: page,
+          limit: limit,
+        };
         
-        const params = new URLSearchParams(searchParams.toString());
-        const response = await api.get(`/articles?${params.toString()}`);
+        const response = await api.get(`/articles`,{params:queryParams});
         setArticles(response.data.data);
         setTotalArticles(response.data.total);
       } catch (error) {
@@ -66,37 +98,7 @@ export default function Articles() {
         setTotalArticles(0);
       }
     };
-    
-    getArticlesData();
-  }, [searchParams]);
-  useEffect(() => {
 
-    if (debouncedSearchQuery === (searchParams.get('search') || '') && selectedCategory === (searchParams.get('category') || '')) {
-      return;
-    }
-
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('page', '1');
-
-    if (debouncedSearchQuery) {
-      params.set('title', debouncedSearchQuery);
-    } else {
-      params.delete('title');
-    }
-
-    if (selectedCategory) {
-      params.set('category', selectedCategory);
-    } else {
-      params.delete('category');
-    }
-
-
-    router.replace(`?${params.toString()}`);
-    
-  }, [debouncedSearchQuery, selectedCategory, router, searchParams]); 
-
-
-  useEffect(() => {
     const getCategoriesList = async() => {
       try {
         const response = await api.get('/categories');
@@ -105,21 +107,14 @@ export default function Articles() {
         console.error("Failed to fetch categories:", error);
       }
     };
+
+
+
+  useEffect(() => {
     getCategoriesList();
-  }, []);
+    getArticlesData(page, pageSize, debouncedSearchValue, categoryValue);
+  }, [page, pageSize, debouncedSearchValue, categoryValue]);
 
-
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchInput(e.target.value);
-  };
-  
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCategory(e.target.value);
-  };
-
-  const page = Number(searchParams.get('page')) || 1;
-  const pageSize = Number(searchParams.get('pageSize')) || 10;
 
 
   return (
@@ -130,26 +125,40 @@ export default function Articles() {
         </p>
         <div className='flex justify-between flex-row items-center p-6 border-2 border-[#E2E8F0]'>
           <div className="flex items-center space-x-4 w-full">
-              <select
-                className="p-2 rounded-md border border-gray-300 text-gray-700 bg-white"
-                value={selectedCategory}
-                onChange={handleCategoryChange}
-              >
-                <option value="">All Categories</option>
-                {listCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.name}
-                  </option>
-                ))}
-              </select>
+              <Select
+                  
+                  value={categoryValue}
+                  onValueChange={setCategoryValue}
+                >
+                  <SelectTrigger 
+                    className="p-2 rounded-md w-full sm:w-fit border border-gray-300 text-gray-700 bg-white">
+                    <SelectValue placeholder="filter by Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel> Category </SelectLabel>
+                      {listCategories.map((cat) => (
+                        cat.id ? (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ) : null
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                  
+                </Select>
 
-              <input
-                type="text"
-                className="flex-grow p-2 rounded-md border border-gray-300 text-gray-700 bg-white"
-                placeholder="Search articles by title..."
-                value={searchInput}
-                onChange={handleSearchChange}
-              />
+              <Input
+                  type="text"
+                  className="sm:flex-grow w-full p-2 rounded-md border border-gray-300 text-gray-700 bg-white"
+                  placeholder="Search articles"
+                  value={searchValue}
+                  onChange={e => {
+                    setSearchValue(e.target.value);
+                    handleSearchDebounced(e.target.value);
+                  }} 
+                />
             </div>
             <Link className='px-4 py-2 bg-[#2563EB] rounded-md text-white whitespace-nowrap ml-4' href={'/admin/articles/add'}>
               + Add Article

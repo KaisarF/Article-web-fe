@@ -52,17 +52,17 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
 
     useEffect(() => {
         const getArticleDetail = async () => {
-        setLoading(true);
-        setError(null);
-        getArticlesData()
-        try {
-            const response = await api.get(`/articles/${detail}`);
-            setArticle(response.data);
-        } catch (err) {
-            setError(`Failed to fetch article data: ${err}`);
-        } finally {
-            setLoading(false);
-        }
+            setLoading(true);
+            setError(null);
+            getArticlesData()
+            try {
+                const response = await api.get(`/articles/${detail}`);
+                setArticle(response.data);
+            } catch (err) {
+                setError(`Failed to fetch article data: ${err}`);
+            } finally {
+                setLoading(false);
+            }
         };
         getArticleDetail();
     }, [detail]);

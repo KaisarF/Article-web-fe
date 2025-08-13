@@ -1,7 +1,7 @@
 'use client'
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 import bgImg from "../../../../public/bg-dashboard.jpg";
@@ -10,6 +10,9 @@ import api from '@/app/axios';
 import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
 import { PaginationWithLinks } from "@/components/ui/pagination-with-links";
+
+import { Select, SelectTrigger, SelectValue ,SelectContent, SelectGroup,SelectLabel, SelectItem} from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface Category {
   id: string;
@@ -33,16 +36,16 @@ const wordLimitation = (content: string, counter: number) => {
   return truncated.length === content.length ? truncated : `${truncated}...`;
 };
 
-export default function Articles() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ArticlesContent />
-    </Suspense>
-  );
-}
+// export default function Articles() {
+//   return (
+//     <Suspense fallback={<div>Loading...</div>}>
+//       <ArticlesContent />
+//     </Suspense>
+//   );
+// }
 
-function ArticlesContent() {
-  const router = useRouter();
+ export default function ArticlesContent() {
+  
   const searchParams = useSearchParams();
   
   const page = Number(searchParams.get('page')) || 1;
@@ -52,24 +55,47 @@ function ArticlesContent() {
   const [totalArticles, setTotalArticles] = useState(0);
   const [listCategories, setListCategories] = useState<Category[]>([]);
 
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  
+  const [searchValue, setSearchValue] = useState("");
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState(searchValue);
+  const [categoryValue, setCategoryValue] = useState("")
+  const debounceRef = useRef<number | null>(null);
 
+  const handleSearchDebounced = (query:string) => {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+        debounceRef.current = window.setTimeout(() => {
+            getArticlesData(page, pageSize, query, categoryValue);
+        }, 500);
+    };
+
+
+    useEffect(() => {
+    
+    const handler = setTimeout(() => {
+      setDebouncedSearchValue(searchValue);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchValue]);
   const getArticlesData = async (
-    currentPage: number, 
+    page: number, 
     limit: number, 
-    search = '', 
-    category = ''
+    search :string, 
+    category :string
   ) => {
     try {
-      const params = new URLSearchParams();
-      params.append('page', currentPage.toString());
-      params.append('limit', limit.toString());
-      
-      if (search) params.append('title', search);
-      if (category) params.append('category', category);
+      const queryParams = {
+          title:search,
+          category: category,
+          page: page,
+          limit: limit,
+        };
 
-      const response = await api.get(`/articles?${params.toString()}`);
+      const response = await api.get(`/articles`,{params:queryParams});
       setArticles(response.data.data);
       setTotalArticles(response.data.total);
     } catch (error) {
@@ -103,40 +129,15 @@ function ArticlesContent() {
   }, []);
 
   useEffect(() => {
-    getArticlesData(page, pageSize, searchQuery, selectedCategory);
-  }, [page, pageSize, searchQuery, selectedCategory]);
+    getArticlesData(page, pageSize, debouncedSearchValue, categoryValue);
+  }, [page, pageSize, debouncedSearchValue, categoryValue]);
 
-  useEffect(() => {
-    const urlSearch = searchParams.get('search') || '';
-    const urlCategory = searchParams.get('category') || '';
-    setSearchQuery(urlSearch);
-    setSelectedCategory(urlCategory);
-  }, [searchParams]);
+  
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    const params = new URLSearchParams();
-    params.set('page', '1');
-    params.set('pageSize', pageSize.toString());
-    if (value) params.set('search', value);
-    if (selectedCategory) params.set('category', selectedCategory);
-    router.replace(`?${params.toString()}`);
-  };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const value = e.target.value;
-    setSelectedCategory(value);
-    const params = new URLSearchParams();
-    params.set('page', '1');
-    params.set('pageSize', pageSize.toString());
-    if (searchQuery) params.set('search', searchQuery);
-    if (value) params.set('category', value);
-    router.replace(`?${params.toString()}`);
-  };
 
   return (
-    <>
+    <Suspense fallback={<div>Loading...</div>}>
       <div className="h-full bg-white">
         <div 
           className="w-full h-[850px]  sm:h-[500px] bg-cover bg-center" 
@@ -153,25 +154,39 @@ function ArticlesContent() {
 
               {/* Search & Filter */}
               <div className="flex justify-center flex-col sm:flex-row  gap-3 space-x-4 w-full max-w-3xl mt-6 bg-[#3B82F6] p-2 rounded-md">
-                <select
-                  className="p-2 rounded-md w-full sm:w-fit border border-gray-300 text-gray-700 bg-white"
-                  value={selectedCategory}
-                  onChange={handleCategoryChange}
+                <Select
+                  
+                  value={categoryValue}
+                  onValueChange={setCategoryValue}
                 >
-                  <option value="">Select category</option>
-                  {listCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger 
+                    className="p-2 rounded-md w-full sm:w-fit border border-gray-300 text-gray-700 bg-white">
+                    <SelectValue placeholder="filter by Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel> Category </SelectLabel>
+                      {listCategories.map((cat) => (
+                        cat.id ? (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ) : null
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                  
+                </Select>
 
                 <input
                   type="text"
                   className="sm:flex-grow w-full p-2 rounded-md border border-gray-300 text-gray-700 bg-white"
                   placeholder="Search articles"
-                  value={searchQuery}
-                  onChange={handleSearchChange}
+                  value={searchValue}
+                  onChange={e => {
+                    setSearchValue(e.target.value);
+                    handleSearchDebounced(e.target.value);
+                  }} 
                 />
               </div>
             </div>
@@ -188,40 +203,49 @@ function ArticlesContent() {
               <p>No articles available.</p>
             ) : (
               articles.map(article => (
-                <Link 
-                  key={article.id} 
-                  className="bg-white overflow-hidden h-[432px] rounded-md shadow-md hover:shadow-lg transition-shadow "
-                  href={`/user/articles/${article.id}`}
-                >
-                  <Image
-                    src={article.imageUrl}
-                    alt={article.title}
-                    width={387}
-                    height={240}
-                    className="object-cover w-[387px] h-[240px] text-black rounded-t-md"
-                  />
-                  <div className="h-[176px] py-5 flex flex-col justify-between px-4">
-                    <div>
-                      <p className="text-sm text-gray-600">
-                        {new Date(article.createdAt).toLocaleDateString('en-US', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric',
-                        })}
-                      </p>
-                      <h4 className="text-xl font-bold text-[#0F172A]">
-                        {wordLimitation(article.title, 20)}
-                      </h4>
-                      <div
-                        className="prose text-[#475569]"
-                        dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 70) }}
-                      />
-                    </div>
-                    <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> 
-                      {wordLimitation(article.category?.name || 'Unknown', 10) || 'Unknown'}
-                    </p>
-                  </div>
-                </Link>
+                <Card>
+                  <CardContent>
+                    <Link 
+                      key={article.id} 
+                      className='w-full'
+                      href={`/user/articles/${article.id}`}
+                    >
+                      {article.imageUrl ? (
+                        <Image
+                          src={article.imageUrl}
+                          alt={article.title}
+                          width={387}
+                          height={240}
+                          className="object-cover w-[387px] h-[240px] text-black rounded-t-md"
+                        />
+                      ) : (
+                        <div className="w-[387px] h-[240px] bg-gray-300 rounded-t-md"></div> // Placeholder for missing image
+                      )}
+                      <div className="h-[176px] py-5 flex flex-col justify-between px-4">
+                        <div>
+                          <p className="text-sm text-gray-600">
+                            {new Date(article.createdAt).toLocaleDateString('en-US', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                            })}
+                          </p>
+                          <h4 className="text-xl font-bold text-[#0F172A]">
+                            {wordLimitation(article.title, 20)}
+                          </h4>
+                          <div
+                            className="prose text-[#475569]"
+                            dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 70) }}
+                          />
+                        </div>
+                        <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> 
+                          {wordLimitation(article.category?.name || 'Unknown', 10) || 'Unknown'}
+                        </p>
+                      </div>
+                    </Link>
+                  </CardContent>
+                </Card>
+                
               ))
             )}
           </div>
@@ -237,6 +261,6 @@ function ArticlesContent() {
         </div>
           <Footer/>
       </div>
-    </>
+    </Suspense>
   );
 }

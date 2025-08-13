@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 
 // import Sidebar from '@/components/sidebar';
 // import NavbarAdmin from '@/components/navbarAdmin';
 import api from '@/app/axios';
-
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
 import { PaginationWithLinks } from "@/components/ui/pagination-with-links";
 
 interface Category {
@@ -15,14 +17,14 @@ interface Category {
   createdAt:string;
 }
 
-export default function Categories() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <CategoriesContent />
-    </Suspense>
-  );
-}
-function CategoriesContent() {
+// export default function Categories() {
+//   return (
+//     <Suspense fallback={<div>Loading...</div>}>
+//       <CategoriesContent />
+//     </Suspense>
+//   );
+// }
+export default function CategoriesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -42,22 +44,45 @@ function CategoriesContent() {
 
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
+  const [searchValue, setSearchValue] = useState("");
+  const [debouncedSearchValue, setDebouncedSearchValue] = useState(searchValue);
+  const debounceRef = useRef<number | null>(null);
+
+
+  const handleSearchDebounced = (query:string) => {
+        if (debounceRef.current) {
+            clearTimeout(debounceRef.current);
+        }
+        debounceRef.current = window.setTimeout(() => {
+            getCategoryData(page, pageSize, query);
+        }, 500);
+    };
+    useEffect(() => {
+    
+    const handler = setTimeout(() => {
+      setDebouncedSearchValue(searchValue);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchValue]);
 
   const getCategoryData = async (
     currentPage: number, 
     limit: number, 
     search = '', 
-    category = ''
+
   ) => {
     try {
-      const params = new URLSearchParams();
-      params.append('page', currentPage.toString());
-      params.append('limit', limit.toString());
-      
-      if (search) params.append('search', search);
-      if (category) params.append('category', category);
+      const queryParams = {
+          search:search,
+          page: currentPage,
+          limit: limit,
+        };
 
-      const response = await api.get(`/categories?${params.toString()}`);
+
+      const response = await api.get(`/categories`,{params:queryParams});
       setListCategories(response.data.data)
       setTotalCategories(response.data.totalData);
       console.log(response.data)
@@ -80,16 +105,7 @@ function CategoriesContent() {
   }, [searchParams]);
 
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-
-    const params = new URLSearchParams();
-    params.set('page', '1');
-    params.set('pageSize', pageSize.toString());
-    if (value) params.set('search', value);
-    router.replace(`?${params.toString()}`);
-  };
+  
 
   const openAddModal = () => {
     setCategoryName('');
@@ -141,7 +157,7 @@ function CategoriesContent() {
 
 // const initial = userData?.username.charAt(0).toUpperCase() || '';
   return (
-    <>
+    <Suspense fallback={<div>Loading...</div>}>
     <div className=" bg-white py-10">
             <p className="pb-5 px-5 text-gray-700">
               Total Articles:  {totalCategories}
@@ -154,8 +170,11 @@ function CategoriesContent() {
                     type="text"
                     className="flex-grow p-2 rounded-md border w-20 border-gray-300 text-gray-700 bg-white"
                     placeholder="Search articles"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
+                    value={searchValue}
+                  onChange={e => {
+                    setSearchValue(e.target.value);
+                    handleSearchDebounced(e.target.value);
+                  }} 
                   />
                 </div>
                 <button onClick={openAddModal} className='px-4 py-2 bg-blue-600 text-white rounded-md'>+ Add Category</button>
@@ -288,6 +307,6 @@ function CategoriesContent() {
               // }}
               />
           </div>
-    </>
+    </Suspense>
   );
 }
