@@ -6,6 +6,7 @@ import { useEffect, useState, useMemo} from 'react';
 import React, { use } from 'react';
 import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
+import { Card, CardContent } from '@/components/ui/card';
 // import logoLight from '@/../public/logoipsum-light.svg';
 import placeholderImage from '@/../public/uploadImg.svg';
 interface Article {
@@ -67,14 +68,16 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
     }, [detail]);
 
     const otherArticles = useMemo(() => {
-        return articles.filter((a) => a.id !== article?.id);
+        const filteredArticles= articles.filter((a) => a.id !== article?.id);
+        const sameCategoryArticles = filteredArticles.filter((a)=>a.category.name === article?.category.name)
+        return sameCategoryArticles.slice(0,3)
     }, [articles, article]);
 
 
-    const randomOtherArticles = useMemo(() => {
-        const shuffled = [...otherArticles].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, 3);
-    }, [otherArticles]);
+    // const randomOtherArticles = useMemo(() => {
+    //     const shuffled = [...otherArticles].sort(() => 0.5 - Math.random());
+    //     return shuffled.slice(0, 3);
+    // }, [otherArticles]);
 
     if (loading) return <p className="text-center mt-10">Loading article...</p>;
     if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
@@ -114,37 +117,42 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
         <h1 className=' bold'>Other Articles</h1>
             
             <div className=" py-5 justify-center content-center grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 h-full">
-                {randomOtherArticles.length === 0 ? (
-                <p>No articles available.</p>
+                {otherArticles.length === 0 ? (
+                <p>No articles available with same category.</p>
                 ) : (
                 
-                randomOtherArticles.map(article => (
-                    <Link key={article.id} className="bg-white overflow-hidden h-[432px]" href={`/user/articles/${article.id}`} >
-                        <Image
-                            src={article.imageUrl || placeholderImage}
-                            alt={article.title}
-                            width={387}
-                            height={240}
-                            className="object-cover w-[387px] h-[240px] text-black rounded-2xl"
-                          />
-                    <div className="h-[176px] py-5 flex flex-col justify-between">
-                        <div>
-                        <p className="text-sm text-gray-600">
-                            {new Date(article.createdAt).toLocaleDateString('en-US', {
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            })}
-                        </p>
-                        <h4 className="text-xl font-bold text-[#0F172A]">{wordLimitation(article.title, 20)}</h4>
-                        <div
-                            className="prose text-[#475569]"
-                            dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 100) }}
-                        />
-                        </div>
-                        <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> {wordLimitation(article.category?.name || 'Unknown', 10)}</p>
-                    </div>
-                    </Link>
+                otherArticles.map(article => (
+                    <Card>
+                        <CardContent>
+                            <Link key={article.id} className="bg-white overflow-hidden h-[432px]" href={`/user/articles/${article.id}`} >
+                                <Image
+                                    src={article.imageUrl || placeholderImage}
+                                    alt={article.title}
+                                    width={387}
+                                    height={240}
+                                    className="object-cover w-[387px] h-[240px] text-black rounded-2xl"
+                                />
+                                <div className="h-[176px] py-5 flex flex-col justify-between">
+                                    <div>
+                                    <p className="text-sm text-gray-600">
+                                        {new Date(article.createdAt).toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        })}
+                                    </p>
+                                    <h4 className="text-xl font-bold text-[#0F172A]">{wordLimitation(article.title, 20)}</h4>
+                                    <div
+                                        className="prose text-[#475569]"
+                                        dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 100) }}
+                                    />
+                                    </div>
+                                    <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> {wordLimitation(article.category?.name || 'Unknown', 10)}</p>
+                                </div>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                    
                 ))
                 )}
             </div>

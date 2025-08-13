@@ -61,7 +61,7 @@ export async function loginAction(
     };
   }
 
-  // Redirect berdasarkan role yang ada
+
   const roleFromCookie = Cookies.get('role');
   if (roleFromCookie === 'Admin') {
     redirect('/admin/articles');
