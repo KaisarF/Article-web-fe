@@ -1,9 +1,9 @@
 "use client";
 import Image from 'next/image';
-import Link from 'next/link';
+
 import api from '@/app/axios';
 import { useEffect, useState, useMemo} from 'react';
-import React, { use } from 'react';
+import React  from 'react';
 import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
 
@@ -16,6 +16,15 @@ interface UserData {
   role: string;
 
 }
+interface Article {
+  id: string;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  user: { username: string };
+  category: { name: string };
+  createdAt: string;
+}
 const wordLimitation = (content: string, counter: number) => {
   if (!content) return '';
   const truncated = content.slice(0, counter);
@@ -26,15 +35,20 @@ export default function Page() {
 
     const { previewData} = useArticleStore();
     const [userData, SetUserData] = useState <UserData | null>()
-    const [articleCat, setArticleCat] = useState([])
+    const [articleCat, setArticleCat] = useState<Article[]>([])
     const GetUserData = async()=>{
         const response = await api.get('/auth/profile')
         SetUserData(response.data)
 
     }
-    const getArticleCat = async()=>{
-        const response = await api.get(`articles?category=${previewData?.categoryId}`)
-        setArticleCat(response.data.data)
+    const getArticleCat = async ()=>{
+        try{
+            const response = await api.get(`articles?category=${previewData?.categoryId}`)
+            setArticleCat(response.data.data)
+        }catch(error){
+            console.error("Failed to fetch user data:", error)
+        }
+        
     }
 
 
@@ -88,9 +102,9 @@ export default function Page() {
                     <p>No other articles available.</p>
                 ) : (
                     topThreeArticle.map(article => (
-                        <Card>
+                        <Card key={article.id} >
                         <CardContent>
-                            <div key={article.id} className="bg-white overflow-hidden h-[432px]"  >
+                            <div className="bg-white overflow-hidden h-[432px]"  >
                                 <Image
                                     src={article.imageUrl || placeholderImage}
                                     alt={article.title}

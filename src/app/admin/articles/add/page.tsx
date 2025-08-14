@@ -12,9 +12,7 @@ import 'react-quill-new/dist/quill.snow.css';
 import dynamic from 'next/dynamic';
 
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue ,SelectContent, SelectGroup,SelectLabel, SelectItem} from '@/components/ui/select';
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+
 
 import { useArticleStore } from "@/app/stores/articleStores";
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false })
@@ -25,7 +23,7 @@ interface Category {
 
  export default function AddArticles(){
     const router = useRouter();
-    const { previewData,setPreviewData } = useArticleStore();
+    const { setPreviewData } = useArticleStore();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     
@@ -213,7 +211,8 @@ interface Category {
             <div className="mb-4">
                 <label htmlFor="title" className="block text-m font-medium text-gray-700 mb-1">Title</label>
                 <input
-                    id="title" type="text" placeholder="Input title" value={formData.title}
+                    id="title" type="text" placeholder="Input title" 
+                    value={formData.title}
                     onChange={(e) => setFormData(prev => ({...prev, title: e.target.value}))}
                     className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-1 focus:ring-blue-600 ${errors.title ? 'border-red-500' : 'border-gray-300'}`}
                 />

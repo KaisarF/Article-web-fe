@@ -117,9 +117,9 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
                     <p>No other articles available.</p>
                 ) : (
                     randomOtherArticles.map(article => (
-                        <Card>
+                        <Card key={article.id}>
                         <CardContent>
-                            <Link key={article.id} className="bg-white overflow-hidden h-[432px]" href={`/admin/articles/preview/${article.id}`} >
+                            <Link  className="bg-white overflow-hidden h-[432px]" href={`/admin/articles/preview/${article.id}`} >
                                 <Image
                                     src={article.imageUrl || placeholderImage}
                                     alt={article.title}

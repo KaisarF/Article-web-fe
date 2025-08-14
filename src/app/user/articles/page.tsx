@@ -36,15 +36,15 @@ const wordLimitation = (content: string, counter: number) => {
   return truncated.length === content.length ? truncated : `${truncated}...`;
 };
 
-// export default function Articles() {
-//   return (
-//     <Suspense fallback={<div>Loading...</div>}>
-//       <ArticlesContent />
-//     </Suspense>
-//   );
-// }
+export default function Articles() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ArticlesContent />
+    </Suspense>
+  );
+}
 
- export default function ArticlesContent() {
+function ArticlesContent() {
   
   const searchParams = useSearchParams();
   
@@ -199,10 +199,10 @@ const wordLimitation = (content: string, counter: number) => {
               <p>No articles available.</p>
             ) : (
               articles.map(article => (
-                <Card>
+                <Card key={article.id} >
                   <CardContent>
                     <Link 
-                      key={article.id} 
+                      
                       className='w-full'
                       href={`/user/articles/${article.id}`}
                     >

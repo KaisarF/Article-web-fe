@@ -2,13 +2,13 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, Suspense, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, } from 'next/navigation';
 
 import api from '@/app/axios';
-import { useDebounce } from '@/app/hooks/useDebounce'; 
+
 import { PaginationWithLinks } from "@/components/ui/pagination-with-links";
 import { Select, SelectTrigger, SelectValue ,SelectContent, SelectGroup,SelectLabel, SelectItem} from '@/components/ui/select';
-import { Card, CardContent } from '@/components/ui/card';
+
 import { Input } from '@/components/ui/input';
 
 
@@ -42,7 +42,7 @@ export default function Articles() {
     );
   }
   function ArticlesContent() {
-    const router = useRouter();
+    
     const searchParams = useSearchParams();
     
     const [articles, setArticles] = useState<Article[]>([]);

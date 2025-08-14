@@ -21,14 +21,14 @@ interface Category {
   createdAt:string;
 }
 
-// export default function Categories() {
-//   return (
-//     <Suspense fallback={<div>Loading...</div>}>
-//       <CategoriesContent />
-//     </Suspense>
-//   );
-// }
-export default function CategoriesContent() {
+export default function Categories() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CategoriesContent />
+    </Suspense>
+  );
+}
+function CategoriesContent() {
 
   const searchParams = useSearchParams();
   
