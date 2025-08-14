@@ -14,6 +14,8 @@ export const loginSchema = z.object({
       password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 }) 
 
-export const inputArticleSchema = z.object({
-  title:z.string().trim()
+export const articleSchema = z.object({
+  title:z.string().trim().min(1,{message:"Please enter title for article"}),
+  content:z.string().trim().min(1,{message:"Please enter content for article"}),
+  categoryId:z.string().trim().min(1,{message:"Please enter category for article"}),
 })

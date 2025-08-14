@@ -10,6 +10,10 @@ import arrow from "@/../public/arrowLeft.svg";
 import uploadImg from '@/../public/uploadImg.svg';
 import 'react-quill-new/dist/quill.snow.css';
 import dynamic from 'next/dynamic';
+import { useArticleStore } from "@/app/stores/articleStores";
+
+import { Button } from "@/components/ui/button";
+
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 interface Category {
@@ -33,13 +37,13 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
   const [categories, setCategories] = useState<Category[]>([]);
   const [current, setCurrent] = useState<ArticleData|null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
+  const { setPreviewData } = useArticleStore();
 
   const [selectedFile, setSelectedFile] = useState<File|null>(null);
   const [previewUrl, setPreviewUrl] = useState<string|null>(null);
   const [removedImage, setRemovedImage] = useState(false);
 
-  const [form, setForm] = useState({ title: '', content: '', categoryId: '' });
+  const [formData, setFormData] = useState({ title: '', content: '', categoryId: '' });
   const [errors, setErrors] = useState<{ title?: string; content?: string; categoryId?: string; image?: string }>({});
 
   useEffect(() => {
@@ -53,7 +57,7 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
         const art: ArticleData = artRes.data;
         setCurrent(art);
         setCategories(catRes.data.data);
-        setForm({
+        setFormData({
           title: art.title,
           content: art.content,
           categoryId: String(art.categoryId)
@@ -68,9 +72,9 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
 
   const validate = () => {
     const errs: typeof errors = {};
-    if (!form.title.trim()) errs.title = 'Title is required.';
-    if (!form.content.trim()) errs.content = 'Content is required.';
-    if (!form.categoryId) errs.categoryId = 'Category must be selected.';
+    if (!formData.title.trim()) errs.title = 'Title is required.';
+    if (!formData.content.trim()) errs.content = 'Content is required.';
+    if (!formData.categoryId) errs.categoryId = 'Category must be selected.';
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -94,6 +98,24 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
     setRemovedImage(true);
   };
 
+  const handlePreview = () => {
+    if (!validate()) {
+        return;
+        }
+        const currentTime = new Date();
+        const formattedTime = currentTime.toLocaleString();
+        const previewData = {
+        title: formData.title,
+        content: formData.content,
+        categoryId: formData.categoryId,
+        imageUrl: previewUrl || '',
+        createdAt:formattedTime
+        };
+
+        setPreviewData(previewData);
+        router.push('/admin/articles/previewBeforeSubmit');
+    };
+
   async function handleUpdate() {
     if (!validate()) return;
     if (!current) {
@@ -113,9 +135,9 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
       }
 
       await api.put(`/articles/${articleId}`, {
-        title: form.title,
-        content: form.content,
-        categoryId: form.categoryId,
+        title: formData.title,
+        content: formData.content,
+        categoryId: formData.categoryId,
         imageUrl
       });
 
@@ -133,7 +155,7 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
     setSelectedFile(null);
     setPreviewUrl(null);
     setRemovedImage(false);
-    if (current) setForm({ title: current.title, content: current.content, categoryId: String(current.categoryId) });
+    if (current) setFormData({ title: current.title, content: current.content, categoryId: String(current.categoryId) });
     setErrors({});
   };
 
@@ -173,7 +195,7 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
       {/* Title */}
       <div className="mb-4">
         <label htmlFor="title" className="block mb-1 font-medium">Title</label>
-        <input id="title" value={form.title} onChange={e=>setForm({...form,title:e.target.value})}
+        <input id="title" value={formData.title} onChange={e=>setFormData({...formData,title:e.target.value})}
           className={`w-full border rounded px-3 py-2 ${errors.title?'border-red-500':'border-gray-300'}`} />
         {errors.title && <p className="text-red-500 text-xs mt-1">{errors.title}</p>}
       </div>
@@ -181,7 +203,7 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
       {/* Category */}
       <div className="mb-6">
         <label htmlFor="cat" className="block mb-1 font-medium">Category</label>
-        <select id="cat" value={form.categoryId} onChange={e=>setForm({...form,categoryId:e.target.value})}
+        <select id="cat" value={formData.categoryId} onChange={e=>setFormData({...formData,categoryId:e.target.value})}
           className={`w-full border rounded px-3 py-2 ${errors.categoryId?'border-red-500':'border-gray-300'}`}>
           <option value="" disabled>Select category</option>
           {categories.map(c=> <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -192,13 +214,30 @@ export default function EditArticles({ params }: { params: Promise<{ edit: strin
       {/* Content */}
       <div className="mb-6">
         <label htmlFor="content" className="block mb-1 font-medium">Content</label>
-        <ReactQuill value={form.content} onChange={v=>setForm({...form,content:v})} className={`${errors.content?'border-red-500':'border-gray-300'} rounded`} />
+        <ReactQuill value={formData.content} onChange={v=>setFormData({...formData,content:v})} className={`${errors.content?'border-red-500':'border-gray-300'} rounded`} />
         {errors.content && <p className="text-red-500 text-xs mt-1">{errors.content}</p>}
       </div>
 
       <div className="flex justify-end space-x-3">
-        <button onClick={resetForm} className="px-4 py-2 border rounded">Cancel</button>
-        <button onClick={handleUpdate} className="px-4 py-2 bg-blue-600 text-white rounded">Save Changes</button>
+       <Button
+                    type="button"
+                    variant={"outline"}
+                    onClick={resetForm}
+                >
+                    Cancel
+                </Button>
+                <Button
+                    variant={"secondary"}
+                    onClick={handlePreview}>
+                    preview
+                </Button>
+                <Button
+                    type="button"
+                    className=" bg-blue-600"
+                    onClick={handleUpdate} 
+                >
+                    Create Article
+                </Button>
       </div>
     </div>
   );

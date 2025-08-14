@@ -9,10 +9,18 @@ import Swal from 'sweetalert2';
 import logoipsum from '../../../public/logoIpsum.svg';
 import eyeOff from '../../../public/eye-off.svg';
 
-// Impor server action kita
+
+import {
+  Card,
+  CardContent,
+  CardFooter,
+
+} from "@/components/ui/card"
+
+import { Button } from "@/components/ui/button";
+
 import { registerAction } from "./action";
 
-// Definisikan state awal untuk useActionState
 const initialState = {
   errors: undefined,
   message: undefined,
@@ -22,12 +30,12 @@ const initialState = {
 export default function Register() {
   const router = useRouter();
   
-  // Gunakan useActionState untuk mengelola state form dari server
+
   const [state, formAction, isPending] = useActionState(registerAction, initialState);
 
   const [showPassword, setShowPassword] = useState(false);
 
-  // Gunakan useEffect untuk menampilkan pesan (misal dari SweetAlert) saat state berubah
+ 
   useEffect(() => {
     if (state.success === true) {
 
@@ -51,10 +59,11 @@ export default function Register() {
   }, [state, router]);
 
   return (
-    // Hubungkan form dengan server action menggunakan prop 'action'
+    
     <form action={formAction}> 
-      <div className='flex justify-center items-center w-screen h-screen m-0 p-0 bg-[#F3F4F6]'>
-        <div className=' flex flex-col justify-center items-center w-[400px] h-auto min-h-[600px] bg-white p-6 rounded-md shadow-md'>
+
+      <Card className='flex justify-center items-center w-screen h-screen m-0 p-0 bg-[#F3F4F6]'>
+        <CardContent className=' flex flex-col justify-center items-center w-[400px] h-auto  bg-white p-6 rounded-md shadow-md'>
           <Image
             src={logoipsum}
             alt='logoipsum'
@@ -66,7 +75,7 @@ export default function Register() {
             <input
               type="text" 
               id="username"
-              name="username" // 'name' sangat penting untuk FormData
+              name="username" 
               placeholder='Input username'
               className='px-3 py-1 border-2 border-[#E2E8F0] text-[#64748B] rounded-md'
             />
@@ -113,20 +122,22 @@ export default function Register() {
               <p className="text-red-500 text-sm">{state.errors.role[0]}</p>
             )}
 
-            <button
+            <Button
               type='submit'
               disabled={isPending} // Gunakan 'isPending' dari useActionState
               className='w-full bg-[#2563EB] h-10 rounded-md mt-5 text-white font-semibold disabled:bg-blue-300 disabled:cursor-not-allowed'
             >
               {isPending ? "Registering..." : "Register"}
-            </button>
+            </Button>
           </div>
-          <p className='text-[#475569]'>
-            Already have an account? 
-            <Link className='text-[#2563EB] underline' href='/login'>Login</Link>
-          </p>
-        </div>
-      </div>
+          <CardFooter>
+            <p className='text-[#475569]'>
+              Already have an account? 
+              <Link className='text-[#2563EB] underline' href='/login'>Login</Link>
+            </p>
+          </CardFooter>
+        </CardContent>
+      </Card>
     </form>
   );
 }

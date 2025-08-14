@@ -13,8 +13,8 @@ import dynamic from 'next/dynamic';
 
 import { Button } from "@/components/ui/button";
 
-
 import { useArticleStore } from "@/app/stores/articleStores";
+
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false })
 interface Category {
     id: number | string;
@@ -89,7 +89,7 @@ interface Category {
         return;
         }
         const currentTime = new Date();
-            const formattedTime = currentTime.toLocaleString();
+        const formattedTime = currentTime.toLocaleString();
         const previewData = {
         title: formData.title,
         content: formData.content,
