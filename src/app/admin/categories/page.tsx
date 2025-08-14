@@ -1,15 +1,19 @@
 'use client'
 
 import { useEffect, useState, Suspense, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams,  } from 'next/navigation';
 
 // import Sidebar from '@/components/sidebar';
 // import NavbarAdmin from '@/components/navbarAdmin';
 import api from '@/app/axios';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTrigger, DialogFooter, DialogClose, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PaginationWithLinks } from "@/components/ui/pagination-with-links";
+
+import { PlusIcon } from '@radix-ui/react-icons';
+
 
 interface Category {
   id: string;
@@ -25,7 +29,7 @@ interface Category {
 //   );
 // }
 export default function CategoriesContent() {
-  const router = useRouter();
+
   const searchParams = useSearchParams();
   
   const page = Number(searchParams.get('page')) || 1;
@@ -34,13 +38,6 @@ export default function CategoriesContent() {
   
   const [totalCategories, setTotalCategories] = useState(0);
   const [listCategories, setListCategories] = useState<Category[]>([]);
-
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  
-
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [currentCategory, setCurrentCategory] = useState<Category | null>(null);
   const [categoryName, setCategoryName] = useState('');
@@ -81,7 +78,6 @@ export default function CategoriesContent() {
           limit: limit,
         };
 
-
       const response = await api.get(`/categories`,{params:queryParams});
       setListCategories(response.data.data)
       setTotalCategories(response.data.totalData);
@@ -94,40 +90,31 @@ export default function CategoriesContent() {
   };
 
   useEffect(() => {
-    getCategoryData(page, pageSize, searchQuery,);
-  }, [page, pageSize, searchQuery, ]);
-
-  useEffect(() => {
-    const urlSearch = searchParams.get('search') || '';
-    
-    setSearchQuery(urlSearch);
-    
-  }, [searchParams]);
-
+    getCategoryData(page, pageSize, debouncedSearchValue,);
+  }, [page, pageSize, debouncedSearchValue ]);
 
   
 
-  const openAddModal = () => {
+  const emptyData = () => {
     setCategoryName('');
-    setShowAddModal(true);
   };
 
   const openEditModal = (category: Category) => {
     setCurrentCategory(category);
     setCategoryName(category.name);
-    setShowEditModal(true);
+    // setShowEditModal(true);
   };
 
   const openDeleteModal = (category: Category) => {
     setCurrentCategory(category);
-    setShowDeleteModal(true);
+    // setShowDeleteModal(true);
   };
 
   const handleAddCategory = async () => {
     try {
       await api.post('/categories', { name: categoryName });
-      setShowAddModal(false);
-      getCategoryData(page, pageSize, searchQuery);
+      
+      getCategoryData(page, pageSize, debouncedSearchValue);
     } catch (error) {
       console.error("Add category failed", error);
     }
@@ -137,8 +124,8 @@ export default function CategoriesContent() {
     if (!currentCategory) return;
     try {
       await api.put(`/categories/${currentCategory.id}`, { name: categoryName });
-      setShowEditModal(false);
-      getCategoryData(page, pageSize, searchQuery);
+      
+      getCategoryData(page, pageSize, debouncedSearchValue);
     } catch (error) {
       console.error("Edit category failed", error);
     }
@@ -148,8 +135,8 @@ export default function CategoriesContent() {
     if (!currentCategory) return;
     try {
       await api.delete(`/categories/${currentCategory.id}`);
-      setShowDeleteModal(false);
-      getCategoryData(page, pageSize, searchQuery);
+      
+      getCategoryData(page, pageSize, debouncedSearchValue);
     } catch (error) {
       console.error("Delete category failed", error);
     }
@@ -177,85 +164,44 @@ export default function CategoriesContent() {
                   }} 
                   />
                 </div>
-                <button onClick={openAddModal} className='px-4 py-2 bg-blue-600 text-white rounded-md'>+ Add Category</button>
+                <Dialog>
+                  <DialogTrigger>
+                    <Button onClick={emptyData} className='bg-[#2563EB]'>
+                      <PlusIcon/> Add Category
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className='w-90'>
+                    <DialogHeader>
+                      <DialogTitle>
+                        Add Category
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div>
+                      {/* <h2 className='text-[#0F172A] text-[20px] font-bold'>Add Category</h2> */}
+                        <div className='flex flex-col gap-2'>
+                          <Label htmlFor="text" className='font-semibold'>Category</Label>
+                          <Input
+                            type="text"
+                            value={categoryName}
+                            onChange={(e) => setCategoryName(e.target.value)}
+                            placeholder="Category name"
+                            className='w-full px-4 py-3 border-1 rounded-xl'
+                            required
+                          />  
+                        </div>
+
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant={'outline'}>cancel</Button>
+                      </DialogClose>
+                      <Button onClick={()=>handleAddCategory()} className='bg-[#2563EB]' >add</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
             </div>
             {/* Add Modal */}
-      {showAddModal && (
-        <div
-          className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
-          onClick={() => setShowAddModal(false)}
-        >
-          <div
-            className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()} 
-          >
-            <h2 className='text-[#0F172A] text-[20px] font-bold'>Add Category</h2>
-            <div className='flex flex-col gap-2'>
-              <label htmlFor="text" className='font-semibold'>Category</label>
-              <input
-                type="text"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                placeholder="Category name"
-                className='w-full px-4 py-3 border-1 rounded-xl'
-              />  
-            </div>
-            <div className='flex flex-row items-center gap-2 justify-end'>
-              <button onClick={() => setShowAddModal(false)} className='py-2 px-4 border-1 rounded-xl'>Cancel</button>
-              <button onClick={handleAddCategory} className='py-2 px-4 border-1 rounded-xl bg-[#2563EB] text-white'>Add</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showEditModal && currentCategory && (
-        <div
-          className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
-          onClick={() => setShowEditModal(false)} 
-        >
-          <div
-            className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()} 
-          >
-            <h2 className='text-[#0F172A] text-[20px] font-bold'>Edit Category</h2>
-            <div className='flex flex-col gap-2'>
-              <label htmlFor="text" className='font-semibold'>Category</label>
-              <input
-                type="text"
-                value={categoryName}
-                onChange={(e) => setCategoryName(e.target.value)}
-                placeholder="Category name"
-                className='w-full px-4 py-3 border-1 rounded-xl'
-              />  
-            </div>
-            <div className='flex flex-row items-center gap-2 justify-end'>
-              <button onClick={() => setShowEditModal(false)} className='py-2 px-4 border-1 rounded-xl'>Cancel</button>
-              <button onClick={handleEditCategory} className='py-2 px-4 border-1 rounded-xl bg-[#2563EB] text-white'>Save Changes</button>
-            </div>
-          </div>
-        </div>
-      )}
-      {showDeleteModal && currentCategory && (
-        <div
-          className="fixed inset-0 z-50 flex justify-center items-center bg-black/50"
-          onClick={() => setShowDeleteModal(false)}
-        >
-          <div
-            className="w-90 h-70 bg-white rounded-md p-10 flex flex-col justify-between"
-            onClick={(e) => e.stopPropagation()} 
-          >
-            <h2 className='text-[#0F172A] text-[20px] font-bold'>Delete Category</h2>
-            <div className='flex flex-col gap-2'>
-              
-            <p>Are you sure you want to delete <strong>{currentCategory.name}</strong>?</p>
-            </div>
-            <div className='flex flex-row items-center gap-2 justify-end'>
-              <button onClick={() => setShowDeleteModal(false)} className='py-2 px-4 border-1 rounded-xl'>Cancel</button>
-              <button onClick={handleDeleteCategory} className='py-2 px-4 border-1 rounded-xl bg-[#DC2626] text-white'>Delete</button>
-            </div>
-          </div>
-        </div>
-      )}
-    
+      
             <table className="min-w-full border-collapse border border-gray-200 my-5 text-center">
               <thead>
                 <tr className="bg-gray-100 text-gray-700 uppercase text-sm">
@@ -287,8 +233,75 @@ export default function CategoriesContent() {
                       <td className="border-y border-gray-300 px-4 py-2">
                         <div className="flex gap-4 text-sm items-center justify-center">
                           
-                          <button className='text-[#2563EB] underline' onClick={() => openEditModal(category)}>Edit</button>
-                          <button className='text-[#EF4444] underline' onClick={() => openDeleteModal(category)}>Delete</button>
+                          <Dialog>
+                            <DialogTrigger>
+                              <Button variant={"ghost"} onClick={()=>openEditModal(category)} className='text-[#2563EB] underline'>
+                                edit
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className='w-90'>
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Edit Category
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div>
+                                {/* <h2 className='text-[#0F172A] text-[20px] font-bold'>Add Category</h2> */}
+                                  <div className='flex flex-col gap-2'>
+                                    <Label htmlFor="text" className='font-semibold'>Category</Label>
+                                    <Input
+                                      type="text"
+                                      value={categoryName}
+                                      onChange={(e) => setCategoryName(e.target.value)}
+                                      placeholder="Category name"
+                                      className='w-full px-4 py-3 border-1 rounded-xl'
+                                      required
+                                    />  
+                                  </div>
+
+                              </div>
+                              <DialogFooter>
+                                <DialogClose asChild>
+                                  <Button variant={'outline'}>cancel</Button>
+                                </DialogClose>
+                                <DialogClose asChild >
+
+                                <Button onClick={handleEditCategory} className='bg-[#2563EB]' >edit</Button>
+                                </DialogClose>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+
+                          {/* delete */}
+                          <Dialog>
+                            <DialogTrigger>
+                              <Button variant={"ghost"} onClick={()=>openDeleteModal(category)} className='text-[#EF4444] underline'>
+                                delete
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className='w-90'>
+                              <DialogHeader>
+                                <DialogTitle>
+                                  Delete Category
+                                </DialogTitle>
+                              </DialogHeader>
+                              <div>
+                                <p className='text-[#64748B]' >Delete category “{category.name}”? This will remove it from master data permanently.</p>
+
+                              </div>
+                              <DialogFooter>
+                                <DialogClose asChild>
+                                  <Button variant={'outline'}>cancel</Button>
+                                </DialogClose>
+                                <DialogClose asChild >
+
+                                <Button onClick={handleDeleteCategory} variant={"destructive"} >delete</Button>
+                                </DialogClose>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+
+                          
                         </div>
                       </td>
                     </tr>

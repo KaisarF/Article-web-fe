@@ -11,6 +11,7 @@ import { Select, SelectTrigger, SelectValue ,SelectContent, SelectGroup,SelectLa
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
+
 interface Category {
   id: string;
   name: string;
@@ -87,9 +88,10 @@ export default function Articles() {
           category: category,
           page: page,
           limit: limit,
+          
         };
         
-        const response = await api.get(`/articles`,{params:queryParams});
+        const response = await api.get(`/articles?sortBy=createdAt&sortOrder=desc`,{params:queryParams});
         setArticles(response.data.data);
         setTotalArticles(response.data.total);
       } catch (error) {

@@ -2,7 +2,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState, Suspense, useRef } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams} from 'next/navigation';
 
 import bgImg from "../../../../public/bg-dashboard.jpg";
 
@@ -131,10 +131,6 @@ const wordLimitation = (content: string, counter: number) => {
   useEffect(() => {
     getArticlesData(page, pageSize, debouncedSearchValue, categoryValue);
   }, [page, pageSize, debouncedSearchValue, categoryValue]);
-
-  
-
-
 
   return (
     <Suspense fallback={<div>Loading...</div>}>

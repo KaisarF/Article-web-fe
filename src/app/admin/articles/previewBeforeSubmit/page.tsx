@@ -7,75 +7,46 @@ import React, { use } from 'react';
 import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
 
+import { useArticleStore } from '@/app/stores/articleStores';
 import { Card, CardContent } from '@/components/ui/card';
+
 import placeholderImage from '@/../public/uploadImg.svg'; 
+interface UserData {
+  username: string;
+  role: string;
 
-interface Article {
-  id: string;
-  title: string;
-  content: string;
-  imageUrl?: string; 
-  user: { username: string };
-  category: { name: string };
-  createdAt: string;
 }
-
 const wordLimitation = (content: string, counter: number) => {
   if (!content) return '';
   const truncated = content.slice(0, counter);
   return truncated.length === content.length ? truncated : `${truncated}...`;
 };
 
-export default function Page({ params }: { params: Promise<{ preview: string }> }) {
-    const [article, setArticle] = useState<Article | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const unwrappedParams = use(params);  
-    const detail = unwrappedParams.preview;
+export default function Page() {
 
-    const [articles, setArticles] = useState<Article[]>([]);
- 
-    const getArticlesData = async () => {
-        try {
-            const response = await api.get(`/articles`);
-            setArticles(response.data.data);
-        } catch (error) {
-            console.error("Failed to fetch articles:", error);
-            setArticles([]);
-        }
-    };
+    const { previewData} = useArticleStore();
+    const [userData, SetUserData] = useState <UserData | null>()
+    const [articleCat, setArticleCat] = useState([])
+    const GetUserData = async()=>{
+        const response = await api.get('/auth/profile')
+        SetUserData(response.data)
 
-    useEffect(() => {
-        const getArticleDetail = async () => {
-            setLoading(true);
-            setError(null);
-            getArticlesData();
-            try {
-                const response = await api.get(`/articles/${detail}`);
-                setArticle(response.data);
-            } catch (error) { 
-                setError(`Failed to fetch article data: ${error}`);
-            } finally {
-                setLoading(false);
-            }
-        };
-        if(detail) { 
-            getArticleDetail();
-        }
-    }, [detail]);
+    }
+    const getArticleCat = async()=>{
+        const response = await api.get(`articles?category=${previewData?.categoryId}`)
+        setArticleCat(response.data.data)
+    }
 
-    const otherArticles = useMemo(() => {
-        return articles.filter((a) => a.id !== article?.id && a.category.name === article?.category.name);
-    }, [articles, article]);
 
-    const randomOtherArticles = useMemo(() => {
-        const shuffled = [...otherArticles].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, 3);
-    }, [otherArticles]);
+    useEffect(()=>{
+        GetUserData()
+        getArticleCat()
+    },[])
 
-    if (loading) return <p className="text-center mt-10">Loading article...</p>;
-    if (error) return <p className="text-center mt-10 text-red-500">{error}</p>;
-    if (!article) return <p className="text-center mt-10">No article data</p>;
+    const topThreeArticle = useMemo(()=>{
+        return articleCat.slice(0,3)
+    },[articleCat]) 
+    
 
   return (
     <div>
@@ -83,20 +54,20 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
         <div className="max-w-5xl mx-auto px-4 py-10 text-gray-900 font-sans leading-relaxed">
             
         <p className="text-center text-sm text-gray-500 mb-2">
-            {new Date(article.createdAt).toLocaleDateString(undefined, {
+            {new Date(previewData?.createdAt??"").toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             })}{' '}
-            · Created by {article.user.username}
+            · Created by {userData?.username}
         </p>
-        <h1 className="text-3xl font-bold text-center mb-8">{article.title}</h1>
+        <h1 className="text-3xl font-bold text-center mb-8">{previewData?.title}</h1>
 
         
-        {article.imageUrl && (
+        {previewData?.imageUrl && (
             <Image
-                src={article.imageUrl  || placeholderImage}
-                alt={article.title}
+                src={previewData?.imageUrl  || placeholderImage}
+                alt={previewData?.title}
                 width={1120}
                 height={480}
                 className="w-full rounded-lg shadow-md mb-10 object-cover"
@@ -107,19 +78,19 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
         
         <article
             className="prose prose-lg max-w-none text-gray-700"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: previewData?.content ??""}}
         />
-        <div className=' px-5 pt-10 flex justify-center content-center flex-col'>
+            <div className=' px-5 pt-10 flex justify-center content-center flex-col'>
             <h1 className='font-bold text-2xl'>Other Articles</h1>
             
             <div className=" py-5 justify-center content-center grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 h-full">
-                {randomOtherArticles.length === 0 ? (
+                {topThreeArticle.length === 0 ? (
                     <p>No other articles available.</p>
                 ) : (
-                    randomOtherArticles.map(article => (
+                    topThreeArticle.map(article => (
                         <Card>
                         <CardContent>
-                            <Link key={article.id} className="bg-white overflow-hidden h-[432px]" href={`/admin/articles/preview/${article.id}`} >
+                            <div key={article.id} className="bg-white overflow-hidden h-[432px]"  >
                                 <Image
                                     src={article.imageUrl || placeholderImage}
                                     alt={article.title}
@@ -144,7 +115,7 @@ export default function Page({ params }: { params: Promise<{ preview: string }> 
                                     </div>
                                     <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> {wordLimitation(article.category?.name || 'Unknown', 10)}</p>
                                 </div>
-                            </Link>
+                            </div>
                         </CardContent>
                     </Card>
                     ))

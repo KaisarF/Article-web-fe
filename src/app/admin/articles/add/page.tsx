@@ -10,6 +10,13 @@ import arrow from "@/../public/arrowLeft.svg"
 import uploadImg from '@/../public/uploadImg.svg'
 import 'react-quill-new/dist/quill.snow.css';
 import dynamic from 'next/dynamic';
+
+import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectValue ,SelectContent, SelectGroup,SelectLabel, SelectItem} from '@/components/ui/select';
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+
+import { useArticleStore } from "@/app/stores/articleStores";
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false })
 interface Category {
     id: number | string;
@@ -18,7 +25,7 @@ interface Category {
 
  export default function AddArticles(){
     const router = useRouter();
-
+    const { previewData,setPreviewData } = useArticleStore();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     
@@ -28,8 +35,8 @@ interface Category {
         categoryId: ''
     });
     const [categoriesList, setCategoriesList] = useState<Category[]>([]);
-    
     const [errors, setErrors] = useState<{ title?: string; content?: string; categoryId?: string; image?: string }>({});
+    
 
     useEffect(() => {
         const getCategories = async () => {
@@ -78,6 +85,25 @@ interface Category {
         setSelectedFile(null);
         setPreviewUrl(null);
     };
+
+    const handlePreview = () => {
+    if (!validateForm()) {
+        return;
+        }
+        const currentTime = new Date();
+            const formattedTime = currentTime.toLocaleString();
+        const previewData = {
+        title: formData.title,
+        content: formData.content,
+        categoryId: formData.categoryId,
+        imageUrl: previewUrl || '',
+        createdAt:formattedTime
+        };
+
+        setPreviewData(previewData);
+        router.push('/admin/articles/previewBeforeSubmit');
+    };
+
 
     async function handleUpload() {
         if (!validateForm()) {
@@ -231,20 +257,25 @@ interface Category {
 
             
             <div className="flex justify-end space-x-3">
-                <button
+                <Button
                     type="button"
-                    className="rounded border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100"
+                    variant={"outline"}
                     onClick={resetForm}
                 >
                     Cancel
-                </button>
-                <button
+                </Button>
+                <Button
+                    variant={"secondary"}
+                    onClick={handlePreview}>
+                    preview
+                </Button>
+                <Button
                     type="button"
-                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                    className=" bg-blue-600"
                     onClick={handleUpload} 
                 >
                     Create Article
-                </button>
+                </Button>
             </div>
         </div>
     )
