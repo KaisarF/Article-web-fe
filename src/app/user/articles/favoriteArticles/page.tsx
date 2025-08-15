@@ -19,7 +19,7 @@ const wordLimitation = (content: string, counter: number) => {
 };
   return (
     <>
-    <div className={`w-full h-full ${isDarkMode?'bg-neutral-800 ':'bg-white '}`}>
+    <div className={`w-full h-screen overflow-y-scroll ${isDarkMode?'bg-neutral-800 ':'bg-white '}`}>
       <Navbar/>
       <div className={`flex flex-col items-center justify-center gap-10 ${isDarkMode?'text-white ':'text-neutral-800 '} `}>
         <h1 className="text-xl font-bold mb-4">My Favorites</h1>
@@ -69,8 +69,8 @@ const wordLimitation = (content: string, counter: number) => {
                         
                       </div>
                     </Link>
-                        <Button variant={'destructive'} onClick={() => remove(article.id)} className="w-10">
-                          <HeartOff/>
+                        <Button variant={'destructive'} onClick={() => remove(article.id)} className="w-fit">
+                          <HeartOff/> un-favorite
                         </Button>
                   </CardContent>
                 </Card>

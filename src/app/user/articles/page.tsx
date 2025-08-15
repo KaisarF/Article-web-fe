@@ -259,12 +259,23 @@ function ArticlesContent() {
                         </p>
                       </div>
                     </Link>
-                        <Button
+                    {fav?(
+                      <Button
                         onClick={(e) => handleFavoriteClick(e, article)}
-                        className='w-10'
+                        className='w-fit'
                         >
-                          {fav?<HeartOff/>:<Heart/>}
+                          <HeartOff/>un-favorite
                         </Button>
+                      ):
+                      (
+                      <Button
+                        onClick={(e) => handleFavoriteClick(e, article)}
+                        className='w-fit'
+                        >
+                          <Heart/>favorite
+                        </Button>
+                      )}
+                        
                   </CardContent>
                 </Card>
                 
