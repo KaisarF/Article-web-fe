@@ -2,9 +2,9 @@
 import Image from 'next/image';
 import logoDark from '../../public/logoIpsum.svg';
 import logoLight from '../../public/logoipsum-light.svg';
-import { usePathname, useRouter } from 'next/navigation'; // Gabungkan import
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useEffect, useState, useRef, useContext } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import api from '@/app/axios';
 import Swal from 'sweetalert2';
 import Cookies from 'js-cookie';

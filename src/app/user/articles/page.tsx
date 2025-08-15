@@ -85,7 +85,7 @@ function ArticlesContent() {
       content: article.content,
       imageUrl: article.imageUrl,
       createdAt:article.createdAt,
-      category:article.category?.name
+      category: article.category?.name ?? 'Unknown'
     });
   };
 
