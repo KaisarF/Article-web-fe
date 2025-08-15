@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useCallback } from "react";
+import { useDarkMode } from "@/app/hooks/darkMode";
 import {
   Pagination,
   PaginationContent,
@@ -47,7 +48,7 @@ export function PaginationWithLinks({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-
+  const {isDarkMode} = useDarkMode()
   const totalPageCount = Math.ceil(totalCount / pageSize);
 
   const buildLink = useCallback(
@@ -137,7 +138,7 @@ export function PaginationWithLinks({
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-3 w-full">
+    <div className={`${isDarkMode ?'text-white':'text-black'} flex flex-col md:flex-row items-center gap-3 w-full`}>
       {pageSizeSelectOptions && (
         <div className="flex flex-col gap-4 flex-1">
           <SelectRowsPerPage

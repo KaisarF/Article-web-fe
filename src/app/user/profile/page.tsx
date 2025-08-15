@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
 import Cookies from 'js-cookie';
-
+import { useDarkMode } from "@/app/hooks/darkMode";
 interface UserData {
   username: string;
   role: string;
@@ -15,9 +15,9 @@ export default function Profile() {
 
   
   const [userData, setUserData] = useState<UserData | null>(null);
-  
+  const {isDarkMode} = useDarkMode()
   useEffect(() => {
-    // Fungsi untuk mengambil data dari API
+
     const getUserData = async () => {
       try {
         const response = await api.get('/auth/profile');
@@ -48,9 +48,9 @@ export default function Profile() {
   const initial = userData.username.charAt(0).toUpperCase();
 
   return (
-    <div className="flex flex-col min-h-screen w-full">
+    <div className={`${isDarkMode?'bg-neutral-800 ':'bg-white '} flex flex-col min-h-screen w-full`}>
       <Navbar/>
-      <div className="flex-grow flex flex-col items-center justify-center bg-white p-4 min-h-full">
+      <div className={`${isDarkMode?'text-white':'text-neutral-800 '} flex-grow flex flex-col items-center justify-center  p-4 min-h-full`}>
         <h1 className="text-xl font-semibold mb-6">User Profile</h1>
 
         <div className="flex flex-col items-center mb-6">

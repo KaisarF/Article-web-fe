@@ -4,26 +4,31 @@ import logoDark from '../../public/logoIpsum.svg';
 import logoLight from '../../public/logoipsum-light.svg';
 import { usePathname, useRouter } from 'next/navigation'; // Gabungkan import
 import Link from 'next/link';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useContext } from 'react';
 import api from '@/app/axios';
 import Swal from 'sweetalert2';
 import Cookies from 'js-cookie';
+import { useDarkMode } from '@/app/hooks/darkMode';
+import { Eclipse } from 'lucide-react';
+import { Button } from './ui/button';
+import { HeartFilledIcon } from '@radix-ui/react-icons';
 interface UserData {
   id: string | number;
   username: string;
   role: string;
 }
 
-interface NavbarProps {
-  isDarkMode?: boolean;
-}
-
-export default function Navbar({ isDarkMode = false }: NavbarProps) {
+export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [userData, setUserData] = useState<UserData | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const { isDarkMode, setIsDarkMode } = useDarkMode();
   const modalRef = useRef<HTMLDivElement>(null);
+
+  const toggleDarkMode = () => {
+        setIsDarkMode(prev => !prev);
+    };
 
   const getUserData = async () => {
     try {
@@ -101,6 +106,21 @@ export default function Navbar({ isDarkMode = false }: NavbarProps) {
         <Image onClick={handleLogoClick} src={logoDark} alt="logo ipsum" className="" />
       )}
       <div className="flex flex-row gap-4 justify-center items-center relative">
+        <Link href={'/user/articles/favoriteArticles'}>
+          <Button variant={'destructive'}>
+            <HeartFilledIcon/> favorite 
+          </Button>
+        </Link>
+        
+        {isDarkMode ?(
+          <Button variant={"outline"} onClick={toggleDarkMode} >
+          <Eclipse /> LightMode
+        </Button>
+        ):(
+        <Button  onClick={toggleDarkMode} >
+          <Eclipse /> DarkMode
+        </Button>
+        )}
         <div className="w-10 h-10 rounded-full bg-gray-400 flex items-center justify-center text-white font-bold text-lg">
           {initial}
         </div>
@@ -108,7 +128,7 @@ export default function Navbar({ isDarkMode = false }: NavbarProps) {
         {/* <<< DIUBAH: Gunakan handler yang baru dibuat */}
         <p
           onClick={handleUsernameClick} 
-          className={isDarkMode ? 'underline text-white cursor-pointer' : 'underline text-black cursor-pointer'}
+          className={isDarkMode ?  'underline text-gray-100 cursor-pointer':'underline text-neutral-300 cursor-pointer'}
         >
           {userData ? userData.username : 'Loading...'}
         </p>

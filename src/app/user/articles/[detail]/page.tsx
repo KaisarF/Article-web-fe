@@ -7,6 +7,7 @@ import React, { use } from 'react';
 import Navbar from "@/components/navbar";
 import Footer from '@/components/footer';
 import { Card, CardContent } from '@/components/ui/card';
+import { useDarkMode } from '@/app/hooks/darkMode';
 // import logoLight from '@/../public/logoipsum-light.svg';
 import placeholderImage from '@/../public/uploadImg.svg';
 interface Article {
@@ -31,7 +32,7 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
     const [error, setError] = useState<string | null>(null);
     const unwrappedParams = use(params);  // this unwraps the Promise
     const detail = unwrappedParams.detail;
-
+    const {isDarkMode} = useDarkMode()
 
 
     const [articles, setArticles] = useState<Article[]>([]);
@@ -84,11 +85,11 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
     if (!article) return <p className="text-center mt-10">No article data</p>;
 
   return (
-    <div>
+    <div className={`${isDarkMode?'bg-neutral-800 ':'bg-white '}`}>
         <Navbar/>
-        <div className="max-w-5xl mx-auto px-4 py-10 text-gray-900 font-sans leading-relaxed">
+        <div className={`max-w-5xl mx-auto px-4 py-10 text-gray-900 font-sans leading-relaxed ${isDarkMode?' text-white':' text-neutral-800'}`}>
             
-        <p className="text-center text-sm text-gray-500 mb-2">
+        <p className={`text-center text-sm `}>
             {new Date(article.createdAt).toLocaleDateString(undefined, {
             year: 'numeric',
             month: 'long',
@@ -96,7 +97,7 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
             })}{' '}
             · Created by {article.user.username}
         </p>
-        <h1 className="text-3xl font-bold text-center mb-8">{article.title}</h1>
+        <h1 className={`  text-3xl font-bold text-center mb-8`}>{article.title}</h1>
 
         
             <Image
@@ -110,7 +111,7 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
         
 
         <article
-            className="prose prose-lg max-w-none text-gray-700"
+            className="prose prose-lg max-w-none "
             dangerouslySetInnerHTML={{ __html: article.content }}
         />
         <div className=' px-5 pt-10 flex justify-center content-center flex-col'>
@@ -122,38 +123,50 @@ export default function Page({ params }: { params: Promise<{ detail: string }> }
                 ) : (
                 
                 otherArticles.map(article => (
-                    <Card key={article.id}>
+                    <Card key={article.id} className={`${isDarkMode?'bg-slate-800':'bg-white'}`} >
                         <CardContent>
-                            <Link  className="bg-white overflow-hidden h-[432px]" href={`/user/articles/${article.id}`} >
+                            <Link 
+                            
+                            className='w-full'
+                            href={`/user/articles/${article.id}`}
+                            >
+                            {article.imageUrl ? (
                                 <Image
-                                    src={article.imageUrl || placeholderImage}
-                                    alt={article.title}
-                                    width={387}
-                                    height={240}
-                                    className="object-cover w-[387px] h-[240px] text-black rounded-2xl"
+                                src={article.imageUrl}
+                                alt={article.title}
+                                width={387}
+                                height={240}
+                                className="object-cover w-[387px] h-[240px] text-black rounded-t-md"
                                 />
-                                <div className="h-[176px] py-5 flex flex-col justify-between">
-                                    <div>
-                                    <p className="text-sm text-gray-600">
-                                        {new Date(article.createdAt).toLocaleDateString('en-US', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        })}
-                                    </p>
-                                    <h4 className="text-xl font-bold text-[#0F172A]">{wordLimitation(article.title, 20)}</h4>
-                                    <div
-                                        className="prose text-[#475569]"
-                                        dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 100) }}
-                                    />
-                                    </div>
-                                    <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> {wordLimitation(article.category?.name || 'Unknown', 10)}</p>
+                            ) : (
+                                <div className="w-full h-[240px] object-cover bg-gray-300 rounded-t-md"></div> // Placeholder for missing image
+                            )}
+                            <div className="h-[176px] py-5 flex flex-col justify-between px-4">
+                                <div>
+                                <p className={`text-sm ${isDarkMode ?'text-white':'text-[#475569]'}`}>
+                                    {new Date(article.createdAt).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'long',
+                                    day: 'numeric',
+                                    })}
+                                </p>
+                                <h4 className={`${isDarkMode ?'text-white':'text-[#0F172A]'} text-xl font-bold `}>
+                                    {wordLimitation(article.title, 20)}
+                                </h4>
+                                <div
+                                    className={` ${isDarkMode ?'text-white':'text-[#475569]'} prose `}
+                                    dangerouslySetInnerHTML={{ __html: wordLimitation(article.content, 70) }}
+                                />
                                 </div>
+                                <p className="text-sm text-[#1E3A8A] bg-[#BFDBFE] w-fit px-4 py-1 rounded-2xl "> 
+                                {wordLimitation(article.category?.name || 'Unknown', 10) || 'Unknown'}
+                                </p>
+                            </div>
                             </Link>
                         </CardContent>
                     </Card>
-                    
-                ))
+                        
+                    ))
                 )}
             </div>
         </div>
